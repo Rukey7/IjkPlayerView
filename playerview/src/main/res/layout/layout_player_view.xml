@@ -39,8 +39,7 @@
             android:layout_marginTop="4dp"
             android:gravity="center"
             android:text="188Kb/s"
-            android:textColor="@android:color/white"
-            android:visibility="gone"/>
+            android:textColor="@android:color/white"/>
     </LinearLayout>
 
     <include
@@ -61,5 +60,6 @@
         android:src="@drawable/sel_player_lock"
         android:layout_gravity="center_vertical"
         android:layout_marginLeft="10dp"
+        android:visibility="gone"
         android:layout_height="wrap_content"/>
 </FrameLayout>

@@ -56,9 +56,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     // mTargetState is the state that a method caller intends to reach.
     // For instance, regardless the VideoView object's current state,
     // calling pause() intends to bring the object to a target state
-    // of PlayStateParams.STATE_PAUSED.
-    private int mCurrentState = PlayStateParams.STATE_IDLE;
-    private int mTargetState = PlayStateParams.STATE_IDLE;
+    // of MediaPlayerParams.STATE_PAUSED.
+    private int mCurrentState = MediaPlayerParams.STATE_IDLE;
+    private int mTargetState = MediaPlayerParams.STATE_IDLE;
 
     // All the stuff we need for playing and showing a video
     private IRenderView.ISurfaceHolder mSurfaceHolder = null;
@@ -147,8 +147,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         setFocusableInTouchMode(true);
         requestFocus();
         // REMOVED: mPendingSubtitleTracks = new Vector<Pair<InputStream, MediaFormat>>();
-        mCurrentState = PlayStateParams.STATE_IDLE;
-        mTargetState = PlayStateParams.STATE_IDLE;
+        mCurrentState = MediaPlayerParams.STATE_IDLE;
+        mTargetState = MediaPlayerParams.STATE_IDLE;
         Log.w("IjkVideoView", "initVideoView");
     }
 
@@ -270,8 +270,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mMediaPlayer.stop();
             mMediaPlayer.release();
             mMediaPlayer = null;
-            mCurrentState = PlayStateParams.STATE_IDLE;
-            mTargetState = PlayStateParams.STATE_IDLE;
+            mCurrentState = MediaPlayerParams.STATE_IDLE;
+            mTargetState = MediaPlayerParams.STATE_IDLE;
             AudioManager am = (AudioManager) mAppContext.getSystemService(Context.AUDIO_SERVICE);
             am.abandonAudioFocus(null);
         }
@@ -327,17 +327,17 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
             // we don't set the target state here either, but preserve the
             // target state that was there before.
-            mCurrentState = PlayStateParams.STATE_PREPARING;
+            mCurrentState = MediaPlayerParams.STATE_PREPARING;
             attachMediaController();
         } catch (IOException ex) {
             Log.w(TAG, "Unable to open content: " + mUri, ex);
-            mCurrentState = PlayStateParams.STATE_ERROR;
-            mTargetState = PlayStateParams.STATE_ERROR;
+            mCurrentState = MediaPlayerParams.STATE_ERROR;
+            mTargetState = MediaPlayerParams.STATE_ERROR;
             mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
         } catch (IllegalArgumentException ex) {
             Log.w(TAG, "Unable to open content: " + mUri, ex);
-            mCurrentState = PlayStateParams.STATE_ERROR;
-            mTargetState = PlayStateParams.STATE_ERROR;
+            mCurrentState = MediaPlayerParams.STATE_ERROR;
+            mTargetState = MediaPlayerParams.STATE_ERROR;
             mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
         } finally {
             // REMOVED: mPendingSubtitleTracks.clear();
@@ -383,7 +383,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     IMediaPlayer.OnPreparedListener mPreparedListener = new IMediaPlayer.OnPreparedListener() {
         public void onPrepared(IMediaPlayer mp) {
             mPrepareEndTime = System.currentTimeMillis();
-            mCurrentState = PlayStateParams.STATE_PREPARED;
+            mCurrentState = MediaPlayerParams.STATE_PREPARED;
 
             // Get the capabilities of the player for this stream
             // REMOVED: Metadata
@@ -411,7 +411,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                         // We didn't actually change the size (it was already at the size
                         // we need), so we won't get a "surface changed" callback, so
                         // start the video here instead of in the callback.
-                        if (mTargetState == PlayStateParams.STATE_PLAYING) {
+                        if (mTargetState == MediaPlayerParams.STATE_PLAYING) {
                             start();
                             if (mMediaController != null) {
                                 mMediaController.show();
@@ -428,7 +428,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             } else {
                 // We don't know the video size yet, but should start anyway.
                 // The video size might be reported to us later.
-                if (mTargetState == PlayStateParams.STATE_PLAYING) {
+                if (mTargetState == MediaPlayerParams.STATE_PLAYING) {
                     start();
                 }
             }
@@ -438,8 +438,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private IMediaPlayer.OnCompletionListener mCompletionListener =
             new IMediaPlayer.OnCompletionListener() {
                 public void onCompletion(IMediaPlayer mp) {
-                    mCurrentState = PlayStateParams.STATE_COMPLETED;
-                    mTargetState = PlayStateParams.STATE_COMPLETED;
+                    mCurrentState = MediaPlayerParams.STATE_COMPLETED;
+                    mTargetState = MediaPlayerParams.STATE_COMPLETED;
                     if (mMediaController != null) {
                         mMediaController.hide();
                     }
@@ -504,8 +504,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             new IMediaPlayer.OnErrorListener() {
                 public boolean onError(IMediaPlayer mp, int framework_err, int impl_err) {
                     Log.d(TAG, "Error: " + framework_err + "," + impl_err);
-                    mCurrentState = PlayStateParams.STATE_ERROR;
-                    mTargetState = PlayStateParams.STATE_ERROR;
+                    mCurrentState = MediaPlayerParams.STATE_ERROR;
+                    mTargetState = MediaPlayerParams.STATE_ERROR;
                     if (mMediaController != null) {
                         mMediaController.hide();
                     }
@@ -631,7 +631,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
             mSurfaceWidth = w;
             mSurfaceHeight = h;
-            boolean isValidState = (mTargetState == PlayStateParams.STATE_PLAYING);
+            boolean isValidState = (mTargetState == MediaPlayerParams.STATE_PLAYING);
             boolean hasValidSize = !mRenderView.shouldWaitForResize() || (mVideoWidth == w && mVideoHeight == h);
             if (mMediaPlayer != null && isValidState && hasValidSize) {
                 if (mSeekWhenPrepared != 0) {
@@ -684,9 +684,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mMediaPlayer.release();
             mMediaPlayer = null;
             // REMOVED: mPendingSubtitleTracks.clear();
-            mCurrentState = PlayStateParams.STATE_IDLE;
+            mCurrentState = MediaPlayerParams.STATE_IDLE;
             if (cleartargetstate) {
-                mTargetState = PlayStateParams.STATE_IDLE;
+                mTargetState = MediaPlayerParams.STATE_IDLE;
             }
             AudioManager am = (AudioManager) mAppContext.getSystemService(Context.AUDIO_SERVICE);
             am.abandonAudioFocus(null);
@@ -766,9 +766,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     public void start() {
         if (isInPlaybackState()) {
             mMediaPlayer.start();
-            mCurrentState = PlayStateParams.STATE_PLAYING;
+            mCurrentState = MediaPlayerParams.STATE_PLAYING;
         }
-        mTargetState = PlayStateParams.STATE_PLAYING;
+        mTargetState = MediaPlayerParams.STATE_PLAYING;
     }
 
     @Override
@@ -776,10 +776,10 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         if (isInPlaybackState()) {
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
-                mCurrentState = PlayStateParams.STATE_PAUSED;
+                mCurrentState = MediaPlayerParams.STATE_PAUSED;
             }
         }
-        mTargetState = PlayStateParams.STATE_PAUSED;
+        mTargetState = MediaPlayerParams.STATE_PAUSED;
     }
 
     public void suspend() {
@@ -833,9 +833,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     private boolean isInPlaybackState() {
         return (mMediaPlayer != null &&
-                mCurrentState != PlayStateParams.STATE_ERROR &&
-                mCurrentState != PlayStateParams.STATE_IDLE &&
-                mCurrentState != PlayStateParams.STATE_PREPARING);
+                mCurrentState != MediaPlayerParams.STATE_ERROR &&
+                mCurrentState != MediaPlayerParams.STATE_IDLE &&
+                mCurrentState != MediaPlayerParams.STATE_PREPARING);
     }
 
     @Override

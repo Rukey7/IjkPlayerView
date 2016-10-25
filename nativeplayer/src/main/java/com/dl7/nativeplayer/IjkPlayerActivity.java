@@ -4,6 +4,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.KeyEvent;
 
 import com.dl7.playerview.media.PlayerView;
@@ -50,6 +51,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mPlayerView.configurationChanged(newConfig);
+        Log.w("TTAG", "onConfigurationChanged " + newConfig.orientation);
     }
 
     @Override
@@ -58,5 +60,10 @@ public class IjkPlayerActivity extends AppCompatActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 }

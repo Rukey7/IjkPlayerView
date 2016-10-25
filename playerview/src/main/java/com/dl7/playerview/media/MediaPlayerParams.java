@@ -1,9 +1,8 @@
 package com.dl7.playerview.media;
 
-public class PlayStateParams {
+public class MediaPlayerParams {
 
     /**====================视频裁剪比例 开始=================================*/
-
     /**
      * 可能会剪裁,保持原视频的大小，显示在中心,当原视频的大小超过view的大小超过部分裁剪处理
      */
@@ -28,52 +27,24 @@ public class PlayStateParams {
      * 不剪裁,非等比例拉伸画面到4:3,并完全显示在View中
      */
     public static final int f4_3 = 5;
-    /**====================视频裁剪比例 结束=================================*/
 
-    /**====================进度条显示样式 开始=================================*/
-
-    /**上下样式*/
-    public static final int PROCESS_PORTRAIT = 0;
-    /**左右样式*/
-    public static final int PROCESS_LANDSCAPE = 1;
-    /**中间两边样式*/
-    public static final int PROCESS_CENTER = 2;
-
-    /**====================进度条显示样式 结束=================================*/
-
-
-    /**====================播放器中使用的播放状态 开始=================================*/
-    /**
-     * 空闲
-     */
+    /********************************播放状态**********************************/
+    // 空闲
     public static final int STATE_IDLE = 330;
-    /**
-     * 播放出错
-     */
+    // 错误
     public static final int STATE_ERROR = 331;
-    /**
-     * 准备中/加载中
-     */
+    // 加载中
     public static final int STATE_PREPARING = 332;
-    /**
-     * 准备完成
-     */
+    // 加载完成
     public static final int STATE_PREPARED = 333;
-    /**
-     * 播放中
-     */
+    // 播放中
     public static final int STATE_PLAYING = 334;
-    /**
-     * 暂停
-     */
+    // 暂停
     public static final int STATE_PAUSED = 335;
-    /**
-     * 播放完成
-     */
+    // 结束
     public static final int STATE_COMPLETED = 336;
-    /**====================播放器中使用的播放状态 结束=================================*/
 
-    /**====================ijk状态码表 开始=================================*/
+    /********************************状态码**********************************/
     /*
      * Do not change these values without updating their counterparts in native
      */
@@ -103,6 +74,5 @@ public class PlayStateParams {
     public static final int MEDIA_ERROR_MALFORMED = -1007;
     public static final int MEDIA_ERROR_UNSUPPORTED = -1010;//数据不支持
     public static final int MEDIA_ERROR_TIMED_OUT = -110;//数据超时
-    /**====================ijk状态码表 结束=================================*/
 
 }

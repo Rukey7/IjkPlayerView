@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -46,27 +47,28 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private static final int DEFAULT_HIDE_TIMEOUT = 3000;
     private static final int MSG_UPDATE_SEEK = 10086;
 
-    IjkVideoView mVideoView;
-    ImageView mIvThumb;
-    TextView mTvSpeed;
-    LinearLayout mLlLoading;
-    TextView mTvVolume;
-    TextView mTvBrightness;
-    TextView mTvFastForward;
-    TextView mTvFastRewind;
-    FrameLayout mFlTouchLayout;
-    ImageView mIvBack;
-    TextView mTvTitle;
-    LinearLayout mFullscreenTopBar;
-    ImageView mIvBackWindow;
-    FrameLayout mWindowTopBar;
-    ImageView mIvPlay;
-    TextView mTvCurTime;
-    SeekBar mPlayerSeek;
-    TextView mTvEndTime;
-    ImageView mIvFullscreen;
-    LinearLayout mLlBottomBar;
-    FrameLayout mFlVideoBox;
+    private IjkVideoView mVideoView;
+    private ImageView mIvThumb;
+    private TextView mTvSpeed;
+    private LinearLayout mLlLoading;
+    private TextView mTvVolume;
+    private TextView mTvBrightness;
+    private TextView mTvFastForward;
+    private TextView mTvFastRewind;
+    private FrameLayout mFlTouchLayout;
+    private ImageView mIvBack;
+    private TextView mTvTitle;
+    private LinearLayout mFullscreenTopBar;
+    private ImageView mIvBackWindow;
+    private FrameLayout mWindowTopBar;
+    private ImageView mIvPlay;
+    private TextView mTvCurTime;
+    private SeekBar mPlayerSeek;
+    private TextView mTvEndTime;
+    private ImageView mIvFullscreen;
+    private LinearLayout mLlBottomBar;
+    private FrameLayout mFlVideoBox;
+    private ImageView mIvPlayerLock;
     private AppCompatActivity mAttachActivity;
 
     private Handler mHandler = new Handler() {
@@ -92,7 +94,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private int mCurVolume = -1;
     private int mInitHeight;
     private int mWidthPixels;
-    private int mScreenUiVisibilily;
+    private int mScreenUiVisibility;
+    private OrientationEventListener mOrientationListener;
 
     public PlayerView(Context context) {
         this(context, null);
@@ -131,11 +134,13 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIvFullscreen = (ImageView) findViewById(R.id.iv_fullscreen);
         mLlBottomBar = (LinearLayout) findViewById(R.id.ll_bottom_bar);
         mFlVideoBox = (FrameLayout) findViewById(R.id.fl_video_box);
+        mIvPlayerLock = (ImageView) findViewById(R.id.iv_player_lock);
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
         mIvFullscreen.setOnClickListener(this);
         mIvBackWindow.setOnClickListener(this);
+        mIvPlayerLock.setOnClickListener(this);
     }
 
     public PlayerView initVideoPlayer(String url) {
@@ -145,10 +150,12 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     public void resume() {
         mVideoView.resume();
+        mOrientationListener.enable();
     }
 
     public void pause() {
         mVideoView.pause();
+        mOrientationListener.disable();
     }
 
     public void destroy() {
@@ -181,7 +188,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mVideoView.setOnInfoListener(new IMediaPlayer.OnInfoListener() {
             @Override
             public boolean onInfo(IMediaPlayer iMediaPlayer, int what, int extra) {
-                if (what == PlayStateParams.MEDIA_INFO_NETWORK_BANDWIDTH || what == PlayStateParams.MEDIA_INFO_BUFFERING_BYTES_UPDATE) {
+                if (what == MediaPlayerParams.MEDIA_INFO_NETWORK_BANDWIDTH || what == MediaPlayerParams.MEDIA_INFO_BUFFERING_BYTES_UPDATE) {
                     mTvSpeed.setText(getFormatSize(extra));
                 }
                 switchStatus(what);
@@ -207,10 +214,16 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 return false;
             }
         });
+        //
+        mOrientationListener = new OrientationEventListener(mAttachActivity) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                _handleOrientation(orientation);
+            }
+        };
         // 启动
         mVideoView.setVideoPath(url);
         mVideoView.seekTo(0);
-        //
     }
 
     @Override
@@ -233,6 +246,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mFullscreenTopBar.setVisibility(View.GONE);
         mWindowTopBar.setVisibility(View.GONE);
         mLlBottomBar.setVisibility(View.GONE);
+        mIvPlayerLock.setVisibility(GONE);
     }
 
     private void toggleControlBar() {
@@ -241,9 +255,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (mIsFullscreen) {
             mFullscreenTopBar.setVisibility(mIsShowBar ? View.VISIBLE : View.GONE);
             mWindowTopBar.setVisibility(View.GONE);
+            mIvPlayerLock.setVisibility(mIsShowBar ? View.VISIBLE : View.GONE);
         } else {
             mWindowTopBar.setVisibility(mIsShowBar ? View.VISIBLE : View.GONE);
             mFullscreenTopBar.setVisibility(View.GONE);
+            mIvPlayerLock.setVisibility(GONE);
         }
         if (mIsShowBar) {
             mHandler.postDelayed(mHideBarRunnable, DEFAULT_HIDE_TIMEOUT);
@@ -261,9 +277,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (mIsFullscreen) {
             mFullscreenTopBar.setVisibility(View.VISIBLE);
             mWindowTopBar.setVisibility(View.GONE);
+            mIvPlayerLock.setVisibility(VISIBLE);
         } else {
             mWindowTopBar.setVisibility(View.VISIBLE);
             mFullscreenTopBar.setVisibility(View.GONE);
+            mIvPlayerLock.setVisibility(GONE);
         }
         mHandler.sendEmptyMessage(MSG_UPDATE_SEEK);
         mHandler.removeCallbacks(mHideBarRunnable);
@@ -284,17 +302,17 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private void switchStatus(int status) {
         Log.e("PlayerActivity", "status " + status);
         switch (status) {
-            case PlayStateParams.STATE_PREPARING:
-            case PlayStateParams.MEDIA_INFO_BUFFERING_START:
+            case MediaPlayerParams.STATE_PREPARING:
+            case MediaPlayerParams.MEDIA_INFO_BUFFERING_START:
 //                hideAllView();
                 mLlLoading.setVisibility(View.VISIBLE);
                 break;
 
-            case PlayStateParams.MEDIA_INFO_VIDEO_RENDERING_START:
-            case PlayStateParams.STATE_PLAYING:
-            case PlayStateParams.STATE_PREPARED:
-            case PlayStateParams.MEDIA_INFO_BUFFERING_END:
-            case PlayStateParams.STATE_PAUSED:
+            case MediaPlayerParams.MEDIA_INFO_VIDEO_RENDERING_START:
+            case MediaPlayerParams.STATE_PLAYING:
+            case MediaPlayerParams.STATE_PREPARED:
+            case MediaPlayerParams.MEDIA_INFO_BUFFERING_END:
+            case MediaPlayerParams.STATE_PAUSED:
 //                hideAllView();
                 mLlLoading.setVisibility(View.GONE);
                 mIvThumb.setVisibility(View.GONE);
@@ -376,23 +394,58 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     public void toggleFullScreen() {
         if (WindowUtils.getScreenOrientation(mAttachActivity) == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
             mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            _handleActionBar(false);
-            _changeHeight(false);
-            mIvFullscreen.setSelected(false);
-            mWindowTopBar.setVisibility(View.VISIBLE);
-            mFullscreenTopBar.setVisibility(View.GONE);
-            mIsFullscreen = false;
+//            _changeHeight(false);
+//            mIvFullscreen.setSelected(false);
+//            mWindowTopBar.setVisibility(View.VISIBLE);
+//            mFullscreenTopBar.setVisibility(View.GONE);
+//            mIvPlayerLock.setVisibility(GONE);
+//            mIsFullscreen = false;
         } else {
             mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+//            _handleActionBar(true);
+//            _changeHeight(true);
+//            mIvFullscreen.setSelected(true);
+//            mWindowTopBar.setVisibility(View.GONE);
+//            mFullscreenTopBar.setVisibility(View.VISIBLE);
+//            mIvPlayerLock.setVisibility(VISIBLE);
+//            mIsFullscreen = true;
+        }
+    }
+
+    private void _toggleFullScreen(boolean isFullscreen) {
+        mIsFullscreen = isFullscreen;
+        if (isFullscreen) {
             _handleActionBar(true);
             _changeHeight(true);
             mIvFullscreen.setSelected(true);
             mWindowTopBar.setVisibility(View.GONE);
-            mFullscreenTopBar.setVisibility(View.VISIBLE);
-            mIsFullscreen = true;
+            if (mIsShowBar) {
+                mFullscreenTopBar.setVisibility(View.VISIBLE);
+                mIvPlayerLock.setVisibility(VISIBLE);
+            }
+        } else {
+            _handleActionBar(false);
+            _changeHeight(false);
+            mIvFullscreen.setSelected(false);
+            if (mIsShowBar) {
+                mWindowTopBar.setVisibility(View.VISIBLE);
+            }
+            mFullscreenTopBar.setVisibility(View.GONE);
+            mIvPlayerLock.setVisibility(GONE);
         }
     }
 
+    private void _handleOrientation(int orientation) {
+        if (mIsFullscreen) {
+            if (orientation >= 0 && orientation <= 30 || orientation >= 330) {
+                mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+            }
+        } else {
+            if ((orientation >= 60 && orientation <= 120) || (orientation >= 240 && orientation <= 300)) {
+                mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+            }
+        }
+    }
 
     private void _handleActionBar(boolean isFullscreen) {
         ActionBar supportActionBar = ((AppCompatActivity) mAttachActivity).getSupportActionBar();
@@ -419,7 +472,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (Build.VERSION.SDK_INT >= 19) {
             if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 View decorView = mAttachActivity.getWindow().getDecorView();
-                mScreenUiVisibilily = decorView.getSystemUiVisibility();
+                mScreenUiVisibility = decorView.getSystemUiVisibility();
                 decorView.setSystemUiVisibility(
                         View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -427,9 +480,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                _toggleFullScreen(true);
             } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
                 View decorView = mAttachActivity.getWindow().getDecorView();
-                decorView.setSystemUiVisibility(mScreenUiVisibilily);
+                decorView.setSystemUiVisibility(mScreenUiVisibility);
+                _toggleFullScreen(false);
             }
         }
     }
@@ -502,6 +557,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             _togglePlayStatus();
         } else if (i == R.id.iv_fullscreen) {
             toggleFullScreen();
+        } else if (i == R.id.iv_player_lock) {
+            mIvPlayerLock.setSelected(!mIvPlayerLock.isSelected());
         }
     }
 
