@@ -438,6 +438,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private IMediaPlayer.OnCompletionListener mCompletionListener =
             new IMediaPlayer.OnCompletionListener() {
                 public void onCompletion(IMediaPlayer mp) {
+                    Log.w(TAG, "OnCompletionListener:");
                     mCurrentState = MediaPlayerParams.STATE_COMPLETED;
                     mTargetState = MediaPlayerParams.STATE_COMPLETED;
                     if (mMediaController != null) {

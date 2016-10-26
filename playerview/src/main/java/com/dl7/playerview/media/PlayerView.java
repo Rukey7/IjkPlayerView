@@ -23,6 +23,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -36,21 +37,25 @@ import static android.view.GestureDetector.OnGestureListener;
 import static android.view.GestureDetector.SimpleOnGestureListener;
 import static android.widget.SeekBar.OnSeekBarChangeListener;
 import static com.dl7.playerview.utils.StringUtils.generateTime;
-import static com.dl7.playerview.utils.StringUtils.getFormatSize;
+import static tv.danmaku.ijk.media.player.IMediaPlayer.OnInfoListener;
 
 /**
  * Created by long on 2016/10/24.
  */
 public class PlayerView extends FrameLayout implements View.OnClickListener {
 
+    // 进度条最大值
     private static final int MAX_VIDEO_SEEK = 1000;
+    // 默认隐藏控制栏时间
     private static final int DEFAULT_HIDE_TIMEOUT = 3000;
+    // 更新进度消息
     private static final int MSG_UPDATE_SEEK = 10086;
 
+    // 原生的IjkPlayer
     private IjkVideoView mVideoView;
-    private ImageView mIvThumb;
-    private TextView mTvSpeed;
-    private LinearLayout mLlLoading;
+    // 视频开始前的缩略图，根据需要外部进行加载
+    public ImageView mPlayerThumb;
+    private ProgressBar mLoadingView;
     private TextView mTvVolume;
     private TextView mTvBrightness;
     private TextView mTvFastForward;
@@ -114,9 +119,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
         View.inflate(context, R.layout.layout_player_view, this);
         mVideoView = (IjkVideoView) findViewById(R.id.video_view);
-        mIvThumb = (ImageView) findViewById(R.id.iv_thumb);
-        mTvSpeed = (TextView) findViewById(R.id.tv_speed);
-        mLlLoading = (LinearLayout) findViewById(R.id.ll_loading);
+        mPlayerThumb = (ImageView) findViewById(R.id.iv_thumb);
+        mLoadingView = (ProgressBar) findViewById(R.id.pb_loading);
         mTvVolume = (TextView) findViewById(R.id.tv_volume);
         mTvBrightness = (TextView) findViewById(R.id.tv_brightness);
         mTvFastForward = (TextView) findViewById(R.id.tv_fast_forward);
@@ -163,7 +167,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     private void _initMediaPlayer(String url) {
-        //
+        // 加载 IjkMediaPlayer 库
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
         // 声音
@@ -182,20 +186,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         // 进度
         mPlayerSeek.setMax(MAX_VIDEO_SEEK);
         mPlayerSeek.setOnSeekBarChangeListener(mSeekListener);
-//        hideAllView();
         // 图片
-//        Glide.with(this).load(PIC_URL).into(mIvThumb);
-        mVideoView.setOnInfoListener(new IMediaPlayer.OnInfoListener() {
+        mVideoView.setOnInfoListener(new OnInfoListener() {
             @Override
             public boolean onInfo(IMediaPlayer iMediaPlayer, int what, int extra) {
-                if (what == MediaPlayerParams.MEDIA_INFO_NETWORK_BANDWIDTH || what == MediaPlayerParams.MEDIA_INFO_BUFFERING_BYTES_UPDATE) {
-                    mTvSpeed.setText(getFormatSize(extra));
-                }
                 switchStatus(what);
                 return true;
             }
         });
-//        mVideoView.start();
         //
         final GestureDetector gestureDetector = new GestureDetector(mAttachActivity, mPlayerGestureListener);
         mFlVideoBox.setClickable(true);
@@ -240,8 +238,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     private void hideAllView() {
-        mIvThumb.setVisibility(View.GONE);
-        mLlLoading.setVisibility(View.GONE);
+        mPlayerThumb.setVisibility(View.GONE);
+        mLoadingView.setVisibility(View.GONE);
         mFlTouchLayout.setVisibility(View.GONE);
         mFullscreenTopBar.setVisibility(View.GONE);
         mWindowTopBar.setVisibility(View.GONE);
@@ -300,22 +298,16 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     private void switchStatus(int status) {
-        Log.e("PlayerActivity", "status " + status);
+        Log.e("TTAG", "status " + status);
         switch (status) {
-            case MediaPlayerParams.STATE_PREPARING:
-            case MediaPlayerParams.MEDIA_INFO_BUFFERING_START:
-//                hideAllView();
-                mLlLoading.setVisibility(View.VISIBLE);
+            case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
+                mLoadingView.setVisibility(View.VISIBLE);
                 break;
 
-            case MediaPlayerParams.MEDIA_INFO_VIDEO_RENDERING_START:
-            case MediaPlayerParams.STATE_PLAYING:
-            case MediaPlayerParams.STATE_PREPARED:
-            case MediaPlayerParams.MEDIA_INFO_BUFFERING_END:
-            case MediaPlayerParams.STATE_PAUSED:
-//                hideAllView();
-                mLlLoading.setVisibility(View.GONE);
-                mIvThumb.setVisibility(View.GONE);
+            case IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:
+            case IMediaPlayer.MEDIA_INFO_BUFFERING_END:
+                mLoadingView.setVisibility(View.GONE);
+                mPlayerThumb.setVisibility(View.GONE);
                 break;
         }
     }

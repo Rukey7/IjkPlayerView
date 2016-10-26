@@ -1,1 +1,1 @@
-include ':app', ':nativeplayer', ':playerview'
+include ':sample', ':playerview'

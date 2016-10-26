@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:id="@+id/fl_video_box"
-             android:background="@android:color/black"
+<FrameLayout android:id="@+id/fl_video_box"
+             xmlns:android="http://schemas.android.com/apk/res/android"
              android:layout_width="match_parent"
-             android:layout_height="match_parent">
+             android:layout_height="match_parent"
+             android:background="@android:color/black">
 
     <com.dl7.playerview.media.IjkVideoView
         android:id="@+id/video_view"
@@ -17,30 +17,15 @@
         android:scaleType="fitXY"
         android:src="@android:color/black"/>
 
-    <LinearLayout
-        android:id="@+id/ll_loading"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+    <ProgressBar
+        android:id="@+id/pb_loading"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_gravity="center"
         android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <ProgressBar
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:indeterminateBehavior="repeat"
-            android:indeterminateOnly="true"/>
-
-        <TextView
-            android:id="@+id/tv_speed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:gravity="center"
-            android:text="188Kb/s"
-            android:textColor="@android:color/white"/>
-    </LinearLayout>
+        android:visibility="gone"
+        android:indeterminateBehavior="repeat"
+        android:indeterminateOnly="true"/>
 
     <include
         layout="@layout/layout_touch_gestures"
@@ -57,9 +42,9 @@
     <ImageView
         android:id="@+id/iv_player_lock"
         android:layout_width="wrap_content"
-        android:src="@drawable/sel_player_lock"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_marginLeft="10dp"
-        android:visibility="gone"
-        android:layout_height="wrap_content"/>
+        android:src="@drawable/sel_player_lock"
+        android:visibility="gone"/>
 </FrameLayout>
