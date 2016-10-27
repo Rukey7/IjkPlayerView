@@ -4,15 +4,15 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 
+import com.bumptech.glide.Glide;
 import com.dl7.playerview.media.PlayerView;
 
 public class IjkPlayerActivity extends AppCompatActivity {
 
     private static final String VIDEO_URL = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4";
-
+    private static final String IMAGE_URL = "http://cdn.pcbeta.attachment.inimc.com/data/attachment/forum/201205/15/073132nwznnmjixknqw0wj.jpg";
     Toolbar mToolbar;
     private PlayerView mPlayerView;
 
@@ -26,32 +26,32 @@ public class IjkPlayerActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         mToolbar.setTitle("Video Player");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        mPlayerView.initVideoPlayer(VIDEO_URL);
+        Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
+        mPlayerView.init().setVideoPath(VIDEO_URL);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mPlayerView.resume();
+        mPlayerView.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mPlayerView.pause();
+        mPlayerView.onPause();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mPlayerView.destroy();
+        mPlayerView.onDestroy();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mPlayerView.configurationChanged(newConfig);
-        Log.w("TTAG", "onConfigurationChanged " + newConfig.orientation);
     }
 
     @Override
@@ -64,6 +64,9 @@ public class IjkPlayerActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        if (mPlayerView.onBackPressed()) {
+            return;
+        }
         super.onBackPressed();
     }
 }

@@ -294,7 +294,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
                 renderCallback.onSurfaceDestroyed(surfaceHolder);
             }
 
-            Log.d(TAG, "onSurfaceTextureDestroyed: destroy: " + mOwnSurfaceTexture);
+            Log.d(TAG, "onSurfaceTextureDestroyed: onDestroy: " + mOwnSurfaceTexture);
             // 如果返回 true TextureView 会释放 SurfaceTexture，否则需要客户端自行调用 surfaceTexture.release() 来释放
             return mOwnSurfaceTexture;
         }
