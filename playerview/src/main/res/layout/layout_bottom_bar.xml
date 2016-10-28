@@ -5,12 +5,12 @@
 
     <LinearLayout
         android:id="@+id/ll_bottom_bar"
-        android:visibility="visible"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/bg_video_view"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="visible">
 
         <ImageView
             android:id="@+id/iv_play"
@@ -30,9 +30,13 @@
 
         <SeekBar
             android:id="@+id/player_seek"
+            android:progressDrawable="@drawable/layer_seek_progress"
+            android:thumb="@drawable/shape_seek_ball"
+            android:minHeight="4dp"
+            android:maxHeight="4dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="center_vertical"
             android:layout_weight="1"/>
 
         <TextView

@@ -8,8 +8,8 @@
         android:layout_gravity="center"
         android:background="@drawable/shape_video_bg"
         android:visibility="gone"
-        android:layout_width="80dp"
-        android:layout_height="80dp">
+        android:layout_width="100dp"
+        android:layout_height="100dp">
 
         <!-- 声音 -->
         <TextView
@@ -44,7 +44,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:drawablePadding="5dp"
-            android:drawableTop="@mipmap/ic_fast_forward"
             android:gravity="center"
             android:text="50%"
             android:textColor="@android:color/white"

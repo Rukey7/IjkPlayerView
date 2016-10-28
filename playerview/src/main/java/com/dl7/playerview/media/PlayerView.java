@@ -56,25 +56,43 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private IjkVideoView mVideoView;
     // 视频开始前的缩略图，根据需要外部进行加载
     public ImageView mPlayerThumb;
+    // 加载
     private ProgressBar mLoadingView;
+    // 音量
     private TextView mTvVolume;
+    // 亮度
     private TextView mTvBrightness;
+    // 快进
     private TextView mTvFastForward;
-    private TextView mTvFastRewind;
+    // 触摸信息布局
     private FrameLayout mFlTouchLayout;
+    // 全屏下的后退键
     private ImageView mIvBack;
+    // 全屏下的标题
     private TextView mTvTitle;
+    // 全屏下的TopBar
     private LinearLayout mFullscreenTopBar;
+    // 窗口模式的后退键
     private ImageView mIvBackWindow;
+    // 窗口模式的TopBar
     private FrameLayout mWindowTopBar;
+    // 播放键
     private ImageView mIvPlay;
+    // 当前时间
     private TextView mTvCurTime;
+    // 进度条
     private SeekBar mPlayerSeek;
+    // 结束时间
     private TextView mTvEndTime;
+    // 全屏切换按钮
     private ImageView mIvFullscreen;
+    // BottomBar
     private LinearLayout mLlBottomBar;
+    // 整个视频框架布局
     private FrameLayout mFlVideoBox;
+    // 锁屏键
     private ImageView mIvPlayerLock;
+    // 关联的Activity
     private AppCompatActivity mAttachActivity;
 
     private Handler mHandler = new Handler() {
@@ -90,20 +108,35 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             }
         }
     };
+    // 音量控制
     private AudioManager mAudioManager;
+    // 手势控制
     private GestureDetector mGestureDetector;
+    // 最大音量
     private int mMaxVolume;
+    // 锁屏
     private boolean mIsForbidTouch = false;
+    // 是否显示控制栏
     private boolean mIsShowBar = true;
+    // 是否全屏
     private boolean mIsFullscreen;
+    // 是否正在拖拽进度条
     private boolean mIsSeeking;
+    // 目标进度
     private long mTargetPosition = -1;
+    // 当前进度
     private int mCurPosition = -1;
+    // 当前音量
     private int mCurVolume = -1;
+    // 当前亮度
     private float mCurBrightness = -1;
+    // 初始高度
     private int mInitHeight;
+    // 屏幕宽度
     private int mWidthPixels;
+    // 屏幕UI可见性
     private int mScreenUiVisibility;
+    // 屏幕旋转角度监听
     private OrientationEventListener mOrientationListener;
 
     public PlayerView(Context context) {
@@ -128,7 +161,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mTvVolume = (TextView) findViewById(R.id.tv_volume);
         mTvBrightness = (TextView) findViewById(R.id.tv_brightness);
         mTvFastForward = (TextView) findViewById(R.id.tv_fast_forward);
-        mTvFastRewind = (TextView) findViewById(R.id.tv_fast_rewind);
         mFlTouchLayout = (FrameLayout) findViewById(R.id.fl_touch_layout);
         mIvBack = (ImageView) findViewById(R.id.iv_back);
         mTvTitle = (TextView) findViewById(R.id.tv_title);
@@ -209,7 +241,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mOrientationListener.enable();
         }
         if (mCurPosition != -1) {
-            // 重进后 seekTo 到指定位置播放时，通常会回退到前几秒的关键帧
+            // 重进后 seekTo 到指定位置播放时，通常会回退到前几秒，关键帧??
             mVideoView.seekTo(mCurPosition);
             mCurPosition = -1;
         }
@@ -230,6 +262,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     public void onDestroy() {
         mVideoView.destroy();
+        IjkMediaPlayer.native_profileEnd();
     }
 
     /**
@@ -362,11 +395,15 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             long duration = mVideoView.getDuration();
             // 计算目标位置
             mTargetPosition = (duration * progress) / MAX_VIDEO_SEEK;
+            int deltaTime = (int) ((mTargetPosition - curPosition) / 1000);
+            String desc;
+            // 对比当前位置来显示快进或后退
             if (mTargetPosition > curPosition) {
-                _setFastForward(generateTime(mTargetPosition));
+                desc = generateTime(mTargetPosition) + "/" + generateTime(duration) + "\n" + "+" + deltaTime + "秒";
             } else {
-                _setFastRewind(generateTime(mTargetPosition));
+                desc = generateTime(mTargetPosition) + "/" + generateTime(duration) + "\n" + deltaTime + "秒";
             }
+            _setFastForward(desc);
         }
 
         @Override
@@ -779,25 +816,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
         if (mTvFastForward.getVisibility() == View.GONE) {
             mTvFastForward.setVisibility(View.VISIBLE);
-            mTvFastRewind.setVisibility(View.GONE);
         }
         mTvFastForward.setText(time);
-    }
-
-    /**
-     * 设置后退
-     *
-     * @param time
-     */
-    private void _setFastRewind(String time) {
-        if (mFlTouchLayout.getVisibility() == View.GONE) {
-            mFlTouchLayout.setVisibility(View.VISIBLE);
-        }
-        if (mTvFastRewind.getVisibility() == View.GONE) {
-            mTvFastRewind.setVisibility(View.VISIBLE);
-            mTvFastForward.setVisibility(View.GONE);
-        }
-        mTvFastRewind.setText(time);
     }
 
     /**
@@ -806,7 +826,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private void _hideTouchView() {
         if (mFlTouchLayout.getVisibility() == View.VISIBLE) {
             mTvFastForward.setVisibility(View.GONE);
-            mTvFastRewind.setVisibility(View.GONE);
             mTvVolume.setVisibility(View.GONE);
             mTvBrightness.setVisibility(View.GONE);
             mFlTouchLayout.setVisibility(View.GONE);
@@ -832,12 +851,15 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         } else if (mTargetPosition <= 0) {
             mTargetPosition = 0;
         }
+        int deltaTime = (int) ((mTargetPosition - position) / 1000);
+        String desc;
         // 对比当前位置来显示快进或后退
         if (mTargetPosition > position) {
-            _setFastForward(generateTime(mTargetPosition));
+            desc = generateTime(mTargetPosition) + "/" + generateTime(duration) + "\n" + "+" + deltaTime + "秒";
         } else {
-            _setFastRewind(generateTime(mTargetPosition));
+            desc = generateTime(mTargetPosition) + "/" + generateTime(duration) + "\n" + deltaTime + "秒";
         }
+        _setFastForward(desc);
     }
 
     /**
@@ -863,20 +885,22 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private void _onVolumeSlide(float percent) {
         if (mCurVolume == -1) {
             mCurVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-            if (mCurVolume < 0)
+            if (mCurVolume < 0) {
                 mCurVolume = 0;
+            }
         }
         int index = (int) (percent * mMaxVolume) + mCurVolume;
-        if (index > mMaxVolume)
+        if (index > mMaxVolume) {
             index = mMaxVolume;
-        else if (index < 0)
+        } else if (index < 0) {
             index = 0;
-
+        }
         // 变更声音
         mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index, 0);
         // 变更进度条
         _setVolumeInfo(index);
     }
+
 
     /**
      * 设置亮度控制显示
