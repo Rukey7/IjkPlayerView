@@ -273,17 +273,29 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     public boolean handleVolumeKey(int keyCode) {
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            _setVolume(true);
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            _setVolume(false);
             return true;
         } else {
             return false;
         }
     }
 
+    /**
+     * 回退，全屏时退回竖屏
+     * @return
+     */
     public boolean onBackPressed() {
         if (mIsFullscreen) {
             mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            if (mIsForbidTouch) {
+                // 锁住状态则解锁
+                mIsForbidTouch = false;
+                mIvPlayerLock.setSelected(false);
+                _setControlBarVisible(mIsShowBar);
+            }
             return true;
         }
         return false;
@@ -903,6 +915,30 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
 
     /**
+     * 递增或递减音量，量度按最大音量的 1/15
+     * @param isIncrease 递增或递减
+     */
+    private void _setVolume(boolean isIncrease) {
+        int curVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        if (isIncrease) {
+            curVolume += mMaxVolume / 15;
+        } else {
+            curVolume -= mMaxVolume / 15;
+        }
+        if (curVolume > mMaxVolume) {
+            curVolume = mMaxVolume;
+        } else if (curVolume < 0){
+            curVolume = 0;
+        }
+        // 变更声音
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, curVolume, 0);
+        // 变更进度条
+        _setVolumeInfo(curVolume);
+        mHandler.removeCallbacks(mHideTouchViewRunnable);
+        mHandler.postDelayed(mHideTouchViewRunnable, 1000);
+    }
+
+    /**
      * 设置亮度控制显示
      *
      * @param brightness
@@ -994,4 +1030,13 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**============================ Runnable ============================*/
 
+    /**
+     * 隐藏视图Runnable
+     */
+    private Runnable mHideTouchViewRunnable = new Runnable() {
+        @Override
+        public void run() {
+            _hideTouchView();
+        }
+    };
 }
