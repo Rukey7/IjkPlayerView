@@ -47,4 +47,11 @@
         android:layout_marginLeft="10dp"
         android:src="@drawable/sel_player_lock"
         android:visibility="gone"/>
+
+    <ImageView
+        android:id="@+id/iv_play_circle"
+        android:src="@mipmap/ic_play_circle"
+        android:layout_gravity="center"
+        android:layout_width="56dp"
+        android:layout_height="56dp"/>
 </FrameLayout>

@@ -7,5 +7,4 @@
     <color name="seek_progress">#cce91e63</color>
     <color name="seek_secondary_progress">#88f48fb1</color>
     <color name="seek_ball">#ffe91e63</color>
-    <color name="seek_ball_outside">#88f06292</color>
 </resources>

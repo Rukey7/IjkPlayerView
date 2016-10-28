@@ -898,7 +898,6 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
      */
     private void initRenders() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            Log.w("IjkVideoView", "initRenders");
             setRender(RENDER_TEXTURE_VIEW);
         } else {
             setRender(RENDER_SURFACE_VIEW);

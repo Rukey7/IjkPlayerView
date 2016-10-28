@@ -78,6 +78,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private FrameLayout mWindowTopBar;
     // 播放键
     private ImageView mIvPlay;
+    private ImageView mIvPlayCircle;
     // 当前时间
     private TextView mTvCurTime;
     // 进度条
@@ -138,6 +139,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private int mScreenUiVisibility;
     // 屏幕旋转角度监听
     private OrientationEventListener mOrientationListener;
+    // 进来还未播放
+    private boolean mIsNeverPlay = true;
+    // 外部监听器
+    private OnInfoListener mOutsideInfoListener;
+
 
     public PlayerView(Context context) {
         this(context, null);
@@ -175,12 +181,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mLlBottomBar = (LinearLayout) findViewById(R.id.ll_bottom_bar);
         mFlVideoBox = (FrameLayout) findViewById(R.id.fl_video_box);
         mIvPlayerLock = (ImageView) findViewById(R.id.iv_player_lock);
+        mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
         mIvFullscreen.setOnClickListener(this);
         mIvBackWindow.setOnClickListener(this);
         mIvPlayerLock.setOnClickListener(this);
+        mIvPlayCircle.setOnClickListener(this);
     }
 
     /**
@@ -357,6 +365,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             // 更新进度
             mHandler.sendEmptyMessage(MSG_UPDATE_SEEK);
         }
+        if (mIsNeverPlay) {
+            mIsNeverPlay = false;
+            mIvPlayCircle.setVisibility(GONE);
+        }
     }
 
     /**
@@ -462,7 +474,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param isShowBar
      */
     private void _setControlBarVisible(boolean isShowBar) {
-        if (mIsForbidTouch) {
+        if (mIsNeverPlay) {
+            mIvPlayCircle.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
+        } else if (mIsForbidTouch) {
             mIvPlayerLock.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
         } else {
             mLlBottomBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
@@ -521,6 +535,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mIvPlay.setSelected(false);
             mVideoView.pause();
         } else {
+            if (mIsNeverPlay) {
+                mIsNeverPlay = false;
+                mIvPlayCircle.setVisibility(GONE);
+                mIsShowBar = false;
+            }
             mIvPlay.setSelected(true);
             mVideoView.start();
             // 更新进度
@@ -555,16 +574,16 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         _refreshHideRunnable();
-        int i = v.getId();
-        if (i == R.id.iv_back) {
+        int id = v.getId();
+        if (id == R.id.iv_back) {
             mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        } else if (i == R.id.iv_back_window) {
+        } else if (id == R.id.iv_back_window) {
             mAttachActivity.finish();
-        } else if (i == R.id.iv_play) {
+        } else if (id == R.id.iv_play || id == R.id.iv_play_circle) {
             _togglePlayStatus();
-        } else if (i == R.id.iv_fullscreen) {
+        } else if (id == R.id.iv_fullscreen) {
             _toggleFullScreen();
-        } else if (i == R.id.iv_player_lock) {
+        } else if (id == R.id.iv_player_lock) {
             _togglePlayerLock();
         }
     }
@@ -725,7 +744,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            if (!mIsForbidTouch) {
+            if (!mIsForbidTouch && !mIsNeverPlay) {
                 float mOldX = e1.getX(), mOldY = e1.getY();
                 float deltaY = mOldY - e2.getY();
                 float deltaX = mOldX - e2.getX();
@@ -767,6 +786,16 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 _togglePlayStatus();
             }
             return true;
+        }
+    };
+
+    /**
+     * 隐藏视图Runnable
+     */
+    private Runnable mHideTouchViewRunnable = new Runnable() {
+        @Override
+        public void run() {
+            _hideTouchView();
         }
     };
 
@@ -1002,6 +1031,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         @Override
         public boolean onInfo(IMediaPlayer iMediaPlayer, int status, int extra) {
             switchStatus(status);
+            if (mOutsideInfoListener != null) {
+                mOutsideInfoListener.onInfo(iMediaPlayer, status, extra);
+            }
             return true;
         }
     };
@@ -1028,15 +1060,47 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
-    /**============================ Runnable ============================*/
+    /**============================ Listener ============================*/
 
     /**
-     * 隐藏视图Runnable
+     * Register a callback to be invoked when the media file
+     * is loaded and ready to go.
+     *
+     * @param l The callback that will be run
      */
-    private Runnable mHideTouchViewRunnable = new Runnable() {
-        @Override
-        public void run() {
-            _hideTouchView();
-        }
-    };
+    public void setOnPreparedListener(IMediaPlayer.OnPreparedListener l) {
+        mVideoView.setOnPreparedListener(l);
+    }
+
+    /**
+     * Register a callback to be invoked when the end of a media file
+     * has been reached during playback.
+     *
+     * @param l The callback that will be run
+     */
+    public void setOnCompletionListener(IMediaPlayer.OnCompletionListener l) {
+        mVideoView.setOnCompletionListener(l);
+    }
+
+    /**
+     * Register a callback to be invoked when an error occurs
+     * during playback or setup.  If no listener is specified,
+     * or if the listener returned false, VideoView will inform
+     * the user of any errors.
+     *
+     * @param l The callback that will be run
+     */
+    public void setOnErrorListener(IMediaPlayer.OnErrorListener l) {
+        mVideoView.setOnErrorListener(l);
+    }
+
+    /**
+     * Register a callback to be invoked when an informational event
+     * occurs during playback or setup.
+     *
+     * @param l The callback that will be run
+     */
+    public void setOnInfoListener(IMediaPlayer.OnInfoListener l) {
+        mOutsideInfoListener = l;
+    }
 }

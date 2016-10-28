@@ -10,7 +10,7 @@
         android:layout_gravity="bottom"
         android:background="@color/bg_video_view"
         android:orientation="horizontal"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <ImageView
             android:id="@+id/iv_play"
