@@ -48,6 +48,21 @@
             android:textColor="@android:color/white"
             android:textSize="16sp"/>
 
+        <TextView
+            android:id="@+id/iv_media_quality"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:layout_marginLeft="3dp"
+            android:text="流畅"
+            android:textSize="10dp"
+            android:gravity="center"
+            android:drawablePadding="2dp"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:drawableTop="@mipmap/ic_media_quality_smooth"/>
+
         <ImageView
             android:id="@+id/iv_fullscreen"
             android:layout_width="wrap_content"

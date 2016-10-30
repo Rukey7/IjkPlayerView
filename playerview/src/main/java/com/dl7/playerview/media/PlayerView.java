@@ -9,11 +9,15 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
+import android.support.annotation.IntDef;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MotionEventCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -24,12 +28,20 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.dl7.playerview.R;
 import com.dl7.playerview.utils.WindowUtils;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.List;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
@@ -93,6 +105,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private FrameLayout mFlVideoBox;
     // 锁屏键
     private ImageView mIvPlayerLock;
+    // 清晰度
+    private TextView mIvMediaQuality;
     // 关联的Activity
     private AppCompatActivity mAttachActivity;
 
@@ -182,6 +196,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mFlVideoBox = (FrameLayout) findViewById(R.id.fl_video_box);
         mIvPlayerLock = (ImageView) findViewById(R.id.iv_player_lock);
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
+        _initMediaQuality();
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
@@ -293,6 +308,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 回退，全屏时退回竖屏
+     *
      * @return
      */
     public boolean onBackPressed() {
@@ -485,10 +501,12 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 mFullscreenTopBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
                 mWindowTopBar.setVisibility(View.GONE);
                 mIvPlayerLock.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
+//                mIvMediaQuality.setVisibility(VISIBLE);
             } else {
                 mWindowTopBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
                 mFullscreenTopBar.setVisibility(View.GONE);
                 mIvPlayerLock.setVisibility(View.GONE);
+//                mIvMediaQuality.setVisibility(GONE);
             }
         }
     }
@@ -571,6 +589,24 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
+    /**
+     * 切换视频分辨率控制
+     */
+    private void _toggleMediaQuality() {
+        if (mFlMediaQuality.getVisibility() == GONE) {
+            mFlMediaQuality.setVisibility(VISIBLE);
+        }
+        if (mIsShowQuality) {
+//            ViewCompat.setTranslationX(mFlMediaQuality, 0);
+            ViewCompat.animate(mFlMediaQuality).translationX(mFlMediaQuality.getWidth()).setDuration(DEFAULT_QUALITY_TIME);
+            mIsShowQuality = false;
+        } else {
+//            ViewCompat.setTranslationX(mFlMediaQuality, mFlMediaQuality.getWidth());
+            ViewCompat.animate(mFlMediaQuality).translationX(0).setDuration(DEFAULT_QUALITY_TIME);
+            mIsShowQuality = true;
+        }
+    }
+
     @Override
     public void onClick(View v) {
         _refreshHideRunnable();
@@ -585,6 +621,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             _toggleFullScreen();
         } else if (id == R.id.iv_player_lock) {
             _togglePlayerLock();
+        } else if (id == R.id.iv_media_quality) {
+            if (!mIsShowQuality) {
+                _toggleMediaQuality();
+            }
         }
     }
 
@@ -614,6 +654,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             // 改变图标
             mIvFullscreen.setSelected(true);
             mWindowTopBar.setVisibility(View.GONE);
+            mIvMediaQuality.setVisibility(VISIBLE);
             if (mIsShowBar) {
                 mFullscreenTopBar.setVisibility(View.VISIBLE);
                 mIvPlayerLock.setVisibility(VISIBLE);
@@ -625,8 +666,12 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             if (mIsShowBar) {
                 mWindowTopBar.setVisibility(View.VISIBLE);
             }
+            mIvMediaQuality.setVisibility(GONE);
             mFullscreenTopBar.setVisibility(View.GONE);
             mIvPlayerLock.setVisibility(GONE);
+            if (mIsShowQuality) {
+                _toggleMediaQuality();
+            }
         }
     }
 
@@ -637,6 +682,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     private void _handleOrientation(int orientation) {
         Log.i("TTAG", "" + orientation);
+        if (mIsNeverPlay) {
+            return;
+        }
         if (mIsFullscreen) {
             // 在全屏状态下，角度偏离竖直方向左右30°内进行竖屏切换
             if (orientation >= 0 && orientation <= 30 || orientation >= 330) {
@@ -776,7 +824,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            _toggleControlBar();
+            if (mIsShowQuality) {
+                _toggleMediaQuality();
+            } else {
+                _toggleControlBar();
+            }
             return true;
         }
 
@@ -945,6 +997,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 递增或递减音量，量度按最大音量的 1/15
+     *
      * @param isIncrease 递增或递减
      */
     private void _setVolume(boolean isIncrease) {
@@ -956,7 +1009,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
         if (curVolume > mMaxVolume) {
             curVolume = mMaxVolume;
-        } else if (curVolume < 0){
+        } else if (curVolume < 0) {
             curVolume = 0;
         }
         // 变更声音
@@ -1102,5 +1155,101 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     public void setOnInfoListener(IMediaPlayer.OnInfoListener l) {
         mOutsideInfoListener = l;
+    }
+
+    /**============================ 播放清晰度 ============================*/
+
+    private static final int DEFAULT_QUALITY_TIME = 300;
+    /**
+     * 依次分别为：流畅、清晰、高清、超清和1080P
+     */
+    private static final int MEDIA_QUALITY_SMOOTH = 0;
+    private static final int MEDIA_QUALITY_MEDIUM = 1;
+    private static final int MEDIA_QUALITY_HIGH = 2;
+    private static final int MEDIA_QUALITY_SUPER = 3;
+    private static final int MEDIA_QUALITY_BD = 4;
+
+    private static final int QUALITY_DRAWABLE_RES[] = new int[] {
+            R.mipmap.ic_media_quality_smooth, R.mipmap.ic_media_quality_medium, R.mipmap.ic_media_quality_high,
+            R.mipmap.ic_media_quality_super, R.mipmap.ic_media_quality_bd
+    };
+    private SparseArray<String> mVideoSource = new SparseArray<>();
+    private String[] mMediaQualityDesc;
+    private View mFlMediaQuality;
+    private ListView mLvMediaQuality;
+    private AdapterMediaQuality mQualityAdapter;
+    private List<MediaQualityInfo> mQualityData = new ArrayList<>();
+    private boolean mIsShowQuality = false;
+    private @MediaQuality int mSelectQuality = MEDIA_QUALITY_SMOOTH;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @Target({ElementType.PARAMETER, ElementType.FIELD})
+    @IntDef({MEDIA_QUALITY_SMOOTH, MEDIA_QUALITY_MEDIUM, MEDIA_QUALITY_HIGH, MEDIA_QUALITY_SUPER, MEDIA_QUALITY_BD})
+    public @interface MediaQuality {
+    }
+
+    private void _initMediaQuality() {
+        mMediaQualityDesc = getResources().getStringArray(R.array.media_quality);
+        mFlMediaQuality = findViewById(R.id.fl_media_quality);
+        mIvMediaQuality = (TextView) findViewById(R.id.iv_media_quality);
+        mIvMediaQuality.setOnClickListener(this);
+        mLvMediaQuality = (ListView) findViewById(R.id.lv_media_quality);
+        mQualityAdapter = new AdapterMediaQuality(mAttachActivity);
+        mLvMediaQuality.setAdapter(mQualityAdapter);
+        mQualityAdapter.setSelectListener(new AdapterMediaQuality.OnItemSelectListener() {
+            @Override
+            public void onSelect(int index) {
+                if (mSelectQuality != index) {
+                    Log.w("TTAG", mVideoSource.get(index));
+                    _toggleMediaQuality();
+                    mIvMediaQuality.setCompoundDrawablesWithIntrinsicBounds(null,
+                            ContextCompat.getDrawable(mAttachActivity, QUALITY_DRAWABLE_RES[index]), null, null);
+                    mIvMediaQuality.setText(mMediaQualityDesc[index]);
+                    mSelectQuality = index;
+                }
+            }
+        });
+    }
+
+    public void setVideoSource(String mediaSmooth, String mediaMedium, String mediaHigh, String mediaSuper, String mediaBd) {
+        boolean isSelect = true;
+        if (mediaSmooth != null) {
+            mVideoSource.put(MEDIA_QUALITY_SMOOTH, mediaSmooth);
+            mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_SMOOTH, mMediaQualityDesc[MEDIA_QUALITY_SMOOTH], isSelect));
+            isSelect = false;
+        }
+        if (mediaMedium != null) {
+            mVideoSource.put(MEDIA_QUALITY_MEDIUM, mediaMedium);
+            mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_MEDIUM, mMediaQualityDesc[MEDIA_QUALITY_MEDIUM], isSelect));
+            isSelect = false;
+        }
+        if (mediaHigh != null) {
+            mVideoSource.put(MEDIA_QUALITY_HIGH, mediaHigh);
+            mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_HIGH, mMediaQualityDesc[MEDIA_QUALITY_HIGH], isSelect));
+            isSelect = false;
+        }
+        if (mediaSuper != null) {
+            mVideoSource.put(MEDIA_QUALITY_SUPER, mediaSuper);
+            mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_SUPER, mMediaQualityDesc[MEDIA_QUALITY_SUPER], isSelect));
+            isSelect = false;
+        }
+        if (mediaBd != null) {
+            mVideoSource.put(MEDIA_QUALITY_BD, mediaBd);
+            mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_BD, mMediaQualityDesc[MEDIA_QUALITY_BD], isSelect));
+            isSelect = false;
+        }
+        mQualityAdapter.updateItems(mQualityData);
+    }
+
+    public void setMediaQuality(@MediaQuality int quality) {
+        if (mSelectQuality == quality || mVideoSource.get(quality) == null) {
+            return;
+        }
+        if (mVideoView.isPlaying()) {
+            mCurPosition = mVideoView.getCurrentPosition();
+            mVideoView.release(false);
+        }
+        setVideoPath(mVideoSource.get(quality));
+        mVideoView.start();
     }
 }

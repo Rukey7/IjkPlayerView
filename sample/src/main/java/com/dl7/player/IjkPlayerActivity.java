@@ -28,6 +28,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
         mPlayerView.init().setVideoPath(VIDEO_URL);
+        mPlayerView.setVideoSource(VIDEO_URL, VIDEO_URL, VIDEO_URL, VIDEO_URL, VIDEO_URL);
     }
 
     @Override
