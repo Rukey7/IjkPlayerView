@@ -156,6 +156,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private boolean mIsNeverPlay = true;
     // 外部监听器
     private OnInfoListener mOutsideInfoListener;
+    // 禁止翻转，默认为禁止
+    private boolean mIsForbidOrientation = true;
 
 
     public PlayerView(Context context) {
@@ -241,6 +243,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 _handleOrientation(orientation);
             }
         };
+        if (mIsForbidOrientation) {
+            mOrientationListener.disable();
+        }
     }
 
     @Override
@@ -259,7 +264,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     public void onResume() {
         mVideoView.resume();
-        if (!mIsForbidTouch) {
+        if (!mIsForbidTouch && !mIsForbidOrientation) {
             mOrientationListener.enable();
         }
         if (mCurPosition != -1) {
@@ -385,7 +390,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     public void start() {
         if (!mVideoView.isPlaying()) {
-            Log.e("TTAG", "start");
             mIvPlay.setSelected(true);
             mVideoView.start();
             // 更新进度
@@ -419,6 +423,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     public void reset() {
     }
 
+    /**
+     * 使能视频翻转
+     */
+    public PlayerView enableOrientation() {
+        mIsForbidOrientation = false;
+        mOrientationListener.enable();
+        return this;
+    }
 
     /**============================ 控制栏处理 ============================*/
 
@@ -594,7 +606,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mOrientationListener.disable();
             _hideAllView(true);
         } else {
-            mOrientationListener.enable();
+            if (!mIsForbidOrientation) {
+                mOrientationListener.enable();
+            }
             mFullscreenTopBar.setVisibility(View.VISIBLE);
             mLlBottomBar.setVisibility(View.VISIBLE);
         }
@@ -1109,7 +1123,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         Log.e("TTAG", "status " + status);
         switch (status) {
             case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
-                mLoadingView.setVisibility(View.VISIBLE);
+                if (!mIsNeverPlay) {
+                    mLoadingView.setVisibility(View.VISIBLE);
+                }
                 break;
 
             case IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:
@@ -1170,6 +1186,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * ============================ 播放清晰度 ============================
      */
 
+    // 默认显示/隐藏选择分辨率界面时间
     private static final int DEFAULT_QUALITY_TIME = 300;
     /**
      * 依次分别为：流畅、清晰、高清、超清和1080P
@@ -1184,18 +1201,26 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             R.mipmap.ic_media_quality_smooth, R.mipmap.ic_media_quality_medium, R.mipmap.ic_media_quality_high,
             R.mipmap.ic_media_quality_super, R.mipmap.ic_media_quality_bd
     };
+    // 保存Video Url
     private SparseArray<String> mVideoSource = new SparseArray<>();
+    // 描述信息
     private String[] mMediaQualityDesc;
+    // 分辨率选择布局
     private View mFlMediaQuality;
     // 清晰度
     private TextView mIvMediaQuality;
+    // 分辨率选择列表
     private ListView mLvMediaQuality;
+    // 分辨率选择列表适配器
     private AdapterMediaQuality mQualityAdapter;
+    // 列表数据
     private List<MediaQualityInfo> mQualityData;
+    // 是否显示分辨率选择列表
     private boolean mIsShowQuality = false;
+    // 当前选中的分辨率
     private
     @MediaQuality
-    int mSelectQuality = MEDIA_QUALITY_SMOOTH;
+    int mCurSelectQuality = MEDIA_QUALITY_SMOOTH;
 
     @Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})
@@ -1203,6 +1228,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     public @interface MediaQuality {
     }
 
+    /**
+     * 初始化视频分辨率处理
+     */
     private void _initMediaQuality() {
         mMediaQualityDesc = getResources().getStringArray(R.array.media_quality);
         mFlMediaQuality = findViewById(R.id.fl_media_quality);
@@ -1214,7 +1242,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mLvMediaQuality.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (mSelectQuality != mQualityAdapter.getItem(position).getIndex()) {
+                if (mCurSelectQuality != mQualityAdapter.getItem(position).getIndex()) {
                     setMediaQuality(mQualityAdapter.getItem(position).getIndex());
                     mLoadingView.setVisibility(VISIBLE);
                     start();
@@ -1239,14 +1267,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (mediaSmooth != null) {
             mVideoSource.put(MEDIA_QUALITY_SMOOTH, mediaSmooth);
             mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_SMOOTH, mMediaQualityDesc[MEDIA_QUALITY_SMOOTH], isSelect));
-            mSelectQuality = MEDIA_QUALITY_SMOOTH;
+            mCurSelectQuality = MEDIA_QUALITY_SMOOTH;
             isSelect = false;
         }
         if (mediaMedium != null) {
             mVideoSource.put(MEDIA_QUALITY_MEDIUM, mediaMedium);
             mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_MEDIUM, mMediaQualityDesc[MEDIA_QUALITY_MEDIUM], isSelect));
             if (isSelect) {
-                mSelectQuality = MEDIA_QUALITY_MEDIUM;
+                mCurSelectQuality = MEDIA_QUALITY_MEDIUM;
             }
             isSelect = false;
         }
@@ -1254,7 +1282,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mVideoSource.put(MEDIA_QUALITY_HIGH, mediaHigh);
             mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_HIGH, mMediaQualityDesc[MEDIA_QUALITY_HIGH], isSelect));
             if (isSelect) {
-                mSelectQuality = MEDIA_QUALITY_HIGH;
+                mCurSelectQuality = MEDIA_QUALITY_HIGH;
             }
             isSelect = false;
         }
@@ -1262,7 +1290,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mVideoSource.put(MEDIA_QUALITY_SUPER, mediaSuper);
             mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_SUPER, mMediaQualityDesc[MEDIA_QUALITY_SUPER], isSelect));
             if (isSelect) {
-                mSelectQuality = MEDIA_QUALITY_SUPER;
+                mCurSelectQuality = MEDIA_QUALITY_SUPER;
             }
             isSelect = false;
         }
@@ -1270,14 +1298,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mVideoSource.put(MEDIA_QUALITY_BD, mediaBd);
             mQualityData.add(new MediaQualityInfo(MEDIA_QUALITY_BD, mMediaQualityDesc[MEDIA_QUALITY_BD], isSelect));
             if (isSelect) {
-                mSelectQuality = MEDIA_QUALITY_BD;
+                mCurSelectQuality = MEDIA_QUALITY_BD;
             }
         }
         mQualityAdapter.updateItems(mQualityData);
         mIvMediaQuality.setCompoundDrawablesWithIntrinsicBounds(null,
-                ContextCompat.getDrawable(mAttachActivity, QUALITY_DRAWABLE_RES[mSelectQuality]), null, null);
-        mIvMediaQuality.setText(mMediaQualityDesc[mSelectQuality]);
-        setVideoPath(mVideoSource.get(mSelectQuality));
+                ContextCompat.getDrawable(mAttachActivity, QUALITY_DRAWABLE_RES[mCurSelectQuality]), null, null);
+        mIvMediaQuality.setText(mMediaQualityDesc[mCurSelectQuality]);
+        setVideoPath(mVideoSource.get(mCurSelectQuality));
         return this;
     }
 
@@ -1285,17 +1313,18 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * 选择视频源
      *
      * @param quality 分辨率
+     *        {MEDIA_QUALITY_SMOOTH，MEDIA_QUALITY_MEDIUM，MEDIA_QUALITY_HIGH，MEDIA_QUALITY_SUPER，MEDIA_QUALITY_BD}
      * @return
      */
     public PlayerView setMediaQuality(@MediaQuality int quality) {
-        if (mSelectQuality == quality || mVideoSource.get(quality) == null) {
+        if (mCurSelectQuality == quality || mVideoSource.get(quality) == null) {
             return this;
         }
         mQualityAdapter.setMediaQuality(quality);
         mIvMediaQuality.setCompoundDrawablesWithIntrinsicBounds(null,
                 ContextCompat.getDrawable(mAttachActivity, QUALITY_DRAWABLE_RES[quality]), null, null);
         mIvMediaQuality.setText(mMediaQualityDesc[quality]);
-        mSelectQuality = quality;
+        mCurSelectQuality = quality;
         if (mVideoView.isPlaying()) {
             mCurPosition = mVideoView.getCurrentPosition();
             mVideoView.release(false);
