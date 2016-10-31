@@ -12,6 +12,7 @@ import com.dl7.playerview.media.PlayerView;
 public class IjkPlayerActivity extends AppCompatActivity {
 
     private static final String VIDEO_URL = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4";
+    private static final String VIDEO_URL_HD = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f30.mp4";
     private static final String IMAGE_URL = "http://cdn.pcbeta.attachment.inimc.com/data/attachment/forum/201205/15/073132nwznnmjixknqw0wj.jpg";
     Toolbar mToolbar;
     private PlayerView mPlayerView;
@@ -27,8 +28,10 @@ public class IjkPlayerActivity extends AppCompatActivity {
         mToolbar.setTitle("Video Player");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
-        mPlayerView.init().setVideoPath(VIDEO_URL);
-        mPlayerView.setVideoSource(VIDEO_URL, VIDEO_URL, VIDEO_URL, VIDEO_URL, VIDEO_URL);
+//        mPlayerView.init().setVideoPath(VIDEO_URL).start();
+        mPlayerView.init()
+                .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
+                .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
     }
 
     @Override

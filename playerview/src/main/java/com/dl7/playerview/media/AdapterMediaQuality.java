@@ -16,7 +16,6 @@ import java.util.List;
 
 public class AdapterMediaQuality extends BaseListAdapter<MediaQualityInfo> {
 
-    private OnItemSelectListener mSelectListener;
 
     public AdapterMediaQuality(Context context, List<MediaQualityInfo> datas) {
         super(context, datas);
@@ -34,19 +33,6 @@ public class AdapterMediaQuality extends BaseListAdapter<MediaQualityInfo> {
         TextView qualityDesc = (TextView) view.findViewById(R.id.tv_media_quality);
         qualityDesc.setText(mDatas.get(i).getDesc());
         qualityDesc.setSelected(mDatas.get(i).isSelect());
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!mDatas.get(i).isSelect()) {
-                    _cleanSelected();
-                    mDatas.get(i).setSelect(true);
-                    if (mSelectListener != null) {
-                        mSelectListener.onSelect(mDatas.get(i).getIndex());
-                    }
-                    notifyDataSetChanged();
-                }
-            }
-        });
         return view;
     }
 
@@ -58,11 +44,16 @@ public class AdapterMediaQuality extends BaseListAdapter<MediaQualityInfo> {
         }
     }
 
-    public interface OnItemSelectListener {
-        void onSelect(int index);
-    }
-
-    public void setSelectListener(OnItemSelectListener selectListener) {
-        mSelectListener = selectListener;
+    public void setMediaQuality(int quality) {
+        for (MediaQualityInfo info : mDatas) {
+            if (info.getIndex() == quality) {
+                if (!info.isSelect()) {
+                    _cleanSelected();
+                    info.setSelect(true);
+                    notifyDataSetChanged();
+                }
+                return;
+            }
+        }
     }
 }

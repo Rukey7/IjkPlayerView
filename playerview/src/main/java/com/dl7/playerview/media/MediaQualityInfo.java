@@ -18,7 +18,7 @@ public final class MediaQualityInfo {
         this.isSelect = isSelect;
     }
 
-    public int getIndex() {
+    public @MediaQuality int getIndex() {
         return index;
     }
 

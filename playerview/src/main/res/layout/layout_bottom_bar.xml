@@ -55,7 +55,7 @@
             android:layout_gravity="center"
             android:padding="5dp"
             android:layout_marginLeft="3dp"
-            android:text="流畅"
+            android:text="自动"
             android:textSize="10dp"
             android:gravity="center"
             android:drawablePadding="2dp"
