@@ -3,6 +3,7 @@ package com.dl7.playerview.media;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -13,6 +14,7 @@ import android.support.annotation.IntDef;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.view.ViewPropertyAnimatorListenerAdapter;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
@@ -37,13 +39,29 @@ import android.widget.TextView;
 import com.dl7.playerview.R;
 import com.dl7.playerview.utils.WindowUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import master.flame.danmaku.controller.DrawHandler;
+import master.flame.danmaku.controller.IDanmakuView;
+import master.flame.danmaku.danmaku.loader.ILoader;
+import master.flame.danmaku.danmaku.loader.IllegalDataException;
+import master.flame.danmaku.danmaku.loader.android.DanmakuLoaderFactory;
+import master.flame.danmaku.danmaku.model.BaseDanmaku;
+import master.flame.danmaku.danmaku.model.DanmakuTimer;
+import master.flame.danmaku.danmaku.model.IDisplayer;
+import master.flame.danmaku.danmaku.model.android.DanmakuContext;
+import master.flame.danmaku.danmaku.model.android.Danmakus;
+import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
+import master.flame.danmaku.danmaku.parser.IDataSource;
+import master.flame.danmaku.danmaku.parser.android.BiliDanmukuParser;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
@@ -64,6 +82,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private static final int DEFAULT_HIDE_TIMEOUT = 3000;
     // 更新进度消息
     private static final int MSG_UPDATE_SEEK = 10086;
+    // 无效变量
+    private static final int INVALID_VALUE = -1;
 
     // 原生的IjkPlayer
     private IjkVideoView mVideoView;
@@ -146,8 +166,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private float mCurBrightness = -1;
     // 初始高度
     private int mInitHeight;
-    // 屏幕宽度
+    // 屏幕宽/高度
     private int mWidthPixels;
+    private int mHeightPixels;
     // 屏幕UI可见性
     private int mScreenUiVisibility;
     // 屏幕旋转角度监听
@@ -198,6 +219,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIvPlayerLock = (ImageView) findViewById(R.id.iv_player_lock);
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
         _initMediaQuality();
+        _initVideoSkip();
+//        _initDanmaku();
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
@@ -254,6 +277,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (mInitHeight == 0) {
             mInitHeight = getHeight();
             mWidthPixels = getResources().getDisplayMetrics().widthPixels;
+            mHeightPixels = getResources().getDisplayMetrics().heightPixels;
         }
     }
 
@@ -272,6 +296,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mVideoView.seekTo(mCurPosition);
             mCurPosition = -1;
         }
+        if (mDanmakuView != null && mDanmakuView.isPrepared() && mDanmakuView.isPaused()) {
+            mDanmakuView.resume();
+        }
     }
 
     /**
@@ -282,14 +309,26 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mVideoView.pause();
         mIvPlay.setSelected(false);
         mOrientationListener.disable();
+        if (mDanmakuView != null && mDanmakuView.isPrepared()) {
+            mDanmakuView.pause();
+        }
     }
 
     /**
      * Activity.onDestroy() 里调用
+     * @return  返回播放进度
      */
-    public void onDestroy() {
+    public int onDestroy() {
+        // 记录播放进度
+        int curPosition = mVideoView.getCurrentPosition();
         mVideoView.destroy();
         IjkMediaPlayer.native_profileEnd();
+        if (mDanmakuView != null) {
+            // don't forget release!
+            mDanmakuView.release();
+            mDanmakuView = null;
+        }
+        return curPosition;
     }
 
     /**
@@ -325,6 +364,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 _setControlBarVisible(mIsShowBar);
             }
             return true;
+        }
+        if (mDanmakuView != null) {
+            // don't forget release!
+            mDanmakuView.release();
+            mDanmakuView = null;
         }
         return false;
     }
@@ -400,6 +444,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mIvPlayCircle.setVisibility(GONE);
             mLoadingView.setVisibility(VISIBLE);
             mIsShowBar = false;
+            _showSkipTip();
         }
     }
 
@@ -580,6 +625,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 mIvPlayCircle.setVisibility(GONE);
                 mLoadingView.setVisibility(VISIBLE);
                 mIsShowBar = false;
+                _showSkipTip();
             }
             mIvPlay.setSelected(true);
             mVideoView.start();
@@ -639,6 +685,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         } else if (id == R.id.iv_back_window) {
             mAttachActivity.finish();
         } else if (id == R.id.iv_play || id == R.id.iv_play_circle) {
+            Log.i("TTAG", "onClick " + mSkipPosition);
             _togglePlayStatus();
         } else if (id == R.id.iv_fullscreen) {
             _toggleFullScreen();
@@ -648,6 +695,15 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             if (!mIsShowQuality) {
                 _toggleMediaQuality();
             }
+        } else if (id == R.id.iv_cancel_skip) {
+            mHandler.removeCallbacks(mHideSkipTipRunnable);
+            _hideSkipTip();
+        } else if (id == R.id.tv_do_skip) {
+            mHandler.removeCallbacks(mHideSkipTipRunnable);
+            _hideSkipTip();
+            // 视频跳转
+            mVideoView.seekTo(mSkipPosition);
+            _setProgress();
         }
     }
 
@@ -1178,7 +1234,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      *
      * @param l The callback that will be run
      */
-    public void setOnInfoListener(IMediaPlayer.OnInfoListener l) {
+    public void setOnInfoListener(OnInfoListener l) {
         mOutsideInfoListener = l;
     }
 
@@ -1313,7 +1369,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * 选择视频源
      *
      * @param quality 分辨率
-     *        {MEDIA_QUALITY_SMOOTH，MEDIA_QUALITY_MEDIUM，MEDIA_QUALITY_HIGH，MEDIA_QUALITY_SUPER，MEDIA_QUALITY_BD}
+     *                {MEDIA_QUALITY_SMOOTH，MEDIA_QUALITY_MEDIUM，MEDIA_QUALITY_HIGH，MEDIA_QUALITY_SUPER，MEDIA_QUALITY_BD}
      * @return
      */
     public PlayerView setMediaQuality(@MediaQuality int quality) {
@@ -1332,5 +1388,192 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
         setVideoPath(mVideoSource.get(quality));
         return this;
+    }
+
+    /**
+     * ============================  ============================
+     */
+
+    private ImageView mIvCancelSkip;
+    private TextView mTvSkipTime;
+    private TextView mTvDoSkip;
+    private View mLlSkipLayout;
+    private int mSkipPosition = INVALID_VALUE;
+
+    private void _initVideoSkip() {
+        mLlSkipLayout = findViewById(R.id.ll_skip_layout);
+        mIvCancelSkip = (ImageView) findViewById(R.id.iv_cancel_skip);
+        mTvSkipTime = (TextView) findViewById(R.id.tv_skip_time);
+        mTvDoSkip = (TextView) findViewById(R.id.tv_do_skip);
+        mIvCancelSkip.setOnClickListener(this);
+        mTvDoSkip.setOnClickListener(this);
+        ViewCompat.setTranslationX(mLlSkipLayout, mHeightPixels);
+        ViewCompat.setAlpha(mLlSkipLayout, 0);
+    }
+
+    /**
+     * 返回当前进度
+     * @return
+     */
+    public int getCurPosition() {
+        return mVideoView.getCurrentPosition();
+    }
+
+    /**
+     * 设置跳转提示
+     * @param targetPosition 目标进度
+     */
+    public PlayerView setSkipTip(int targetPosition) {
+        mSkipPosition = targetPosition;
+        Log.w("TTAG", "_showSkipTip " + mSkipPosition);
+        return this;
+    }
+
+    /**
+     * 显示跳转提示
+     */
+    private void _showSkipTip() {
+        Log.e("TTAG", "_showSkipTip " + mSkipPosition);
+        if (mSkipPosition != INVALID_VALUE) {
+            mLlSkipLayout.setVisibility(VISIBLE);
+            mTvSkipTime.setText(generateTime(mSkipPosition));
+            ViewCompat.animate(mLlSkipLayout).translationX(0).alpha(1.0f).setDuration(1000).start();
+            mHandler.postDelayed(mHideSkipTipRunnable, DEFAULT_HIDE_TIMEOUT * 3);
+        }
+    }
+
+    /**
+     * 隐藏跳转提示
+     */
+    private void _hideSkipTip() {
+        if (mLlSkipLayout.getVisibility() == GONE) {
+            return;
+        }
+        ViewCompat.animate(mLlSkipLayout).translationX(-mLlSkipLayout.getWidth()).alpha(0).setDuration(500)
+                .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(View view) {
+                        mLlSkipLayout.setVisibility(GONE);
+                    }
+                }).start();
+        mSkipPosition = INVALID_VALUE;
+    }
+
+    /**
+     * 隐藏跳转提示线程
+     */
+    private Runnable mHideSkipTipRunnable = new Runnable() {
+        @Override
+        public void run() {
+            _hideSkipTip();
+        }
+    };
+
+    /**
+     * ============================  ============================
+     */
+
+
+    private IDanmakuView mDanmakuView;
+    private DanmakuContext mContext;
+    private BaseDanmakuParser mParser;
+
+    private void _initDanmaku() {
+        mDanmakuView = (IDanmakuView) findViewById(R.id.sv_danmaku);
+        // 设置最大显示行数
+        HashMap<Integer, Integer> maxLinesPair = new HashMap<Integer, Integer>();
+        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_RL, 5); // 滚动弹幕最大显示5行
+        // 设置是否禁止重叠
+        HashMap<Integer, Boolean> overlappingEnablePair = new HashMap<Integer, Boolean>();
+        overlappingEnablePair.put(BaseDanmaku.TYPE_SCROLL_RL, true);
+        overlappingEnablePair.put(BaseDanmaku.TYPE_FIX_TOP, true);
+        // 配置参数
+        mContext = DanmakuContext.create();
+        mContext.setDanmakuStyle(IDisplayer.DANMAKU_STYLE_STROKEN, 3)
+                .setDuplicateMergingEnabled(false)
+                .setScrollSpeedFactor(1.2f)
+                .setScaleTextSize(1.2f)
+                .setMaximumVisibleSizeInScreen(50)
+                .setMaximumLines(maxLinesPair)
+                .preventOverlapping(overlappingEnablePair);
+        //
+        if (mDanmakuView != null) {
+//            mParser = createParser(this.getResources().openRawResource(R.raw.comments));
+            try {
+                mParser = createParser(getResources().getAssets().open("comment.json"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mDanmakuView.setCallback(new DrawHandler.Callback() {
+                @Override
+                public void updateTimer(DanmakuTimer timer) {
+                }
+
+                @Override
+                public void drawingFinished() {
+
+                }
+
+                @Override
+                public void danmakuShown(BaseDanmaku danmaku) {
+//                    Log.d("DFM", "danmakuShown(): text=" + danmaku.text);
+                }
+
+                @Override
+                public void prepared() {
+                    mDanmakuView.start();
+                }
+            });
+            mDanmakuView.enableDanmakuDrawingCache(true);
+            mDanmakuView.prepare(mParser, mContext);
+//            mDanmakuView.showFPS(true);
+        }
+    }
+
+    private BaseDanmakuParser createParser(InputStream stream) {
+        if (stream == null) {
+            return new BaseDanmakuParser() {
+                @Override
+                protected Danmakus parse() {
+                    return new Danmakus();
+                }
+            };
+        }
+
+        ILoader loader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
+        try {
+            loader.load(stream);
+        } catch (IllegalDataException e) {
+            e.printStackTrace();
+        }
+        BaseDanmakuParser parser = new BiliDanmukuParser();
+        IDataSource<?> dataSource = loader.getDataSource();
+        parser.load(dataSource);
+        return parser;
+    }
+
+    /**
+     * 添加一条弹幕
+     *
+     * @param isLive 是否直播
+     */
+    private void addDanmaku(boolean isLive) {
+        BaseDanmaku danmaku = mContext.mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
+        if (danmaku == null || mDanmakuView == null) {
+            return;
+        }
+        // for(int i=0;i<100;i++){
+        // }
+        danmaku.text = "这是一条弹幕" + System.nanoTime();
+        danmaku.padding = 5;
+        danmaku.priority = 0;  // 可能会被各种过滤器过滤并隐藏显示
+        danmaku.isLive = isLive;
+        danmaku.setTime(mDanmakuView.getCurrentTime());
+        danmaku.textSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
+        danmaku.textColor = Color.RED;
+        danmaku.textShadowColor = Color.WHITE;
+        // danmaku.underlineColor = Color.GREEN;
+        danmaku.borderColor = Color.GREEN;
+        mDanmakuView.addDanmaku(danmaku);
     }
 }

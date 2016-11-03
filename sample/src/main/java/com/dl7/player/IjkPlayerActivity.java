@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 
-import com.bumptech.glide.Glide;
 import com.dl7.playerview.media.PlayerView;
 
 public class IjkPlayerActivity extends AppCompatActivity {
@@ -27,10 +26,11 @@ public class IjkPlayerActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         mToolbar.setTitle("Video Player");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
+//        Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
 //        mPlayerView.init().setVideoPath(VIDEO_URL).start();
         mPlayerView.init()
                 .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
+                .setSkipTip(1000*60*3)
                 .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
     }
 
