@@ -149,7 +149,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         // REMOVED: mPendingSubtitleTracks = new Vector<Pair<InputStream, MediaFormat>>();
         mCurrentState = MediaPlayerParams.STATE_IDLE;
         mTargetState = MediaPlayerParams.STATE_IDLE;
-        Log.w("IjkVideoView", "initVideoView");
+        _notifyMediaStatus();
     }
 
     /**
@@ -272,6 +272,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mMediaPlayer = null;
             mCurrentState = MediaPlayerParams.STATE_IDLE;
             mTargetState = MediaPlayerParams.STATE_IDLE;
+            _notifyMediaStatus();
             AudioManager am = (AudioManager) mAppContext.getSystemService(Context.AUDIO_SERVICE);
             am.abandonAudioFocus(null);
         }
@@ -341,6 +342,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
         } finally {
             // REMOVED: mPendingSubtitleTracks.clear();
+            _notifyMediaStatus();
         }
     }
 
@@ -384,6 +386,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         public void onPrepared(IMediaPlayer mp) {
             mPrepareEndTime = System.currentTimeMillis();
             mCurrentState = MediaPlayerParams.STATE_PREPARED;
+            _notifyMediaStatus();
 
             // Get the capabilities of the player for this stream
             // REMOVED: Metadata
@@ -441,6 +444,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                     Log.w(TAG, "OnCompletionListener:");
                     mCurrentState = MediaPlayerParams.STATE_COMPLETED;
                     mTargetState = MediaPlayerParams.STATE_COMPLETED;
+                    _notifyMediaStatus();
                     if (mMediaController != null) {
                         mMediaController.hide();
                     }
@@ -449,6 +453,12 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                     }
                 }
             };
+
+    private void _notifyMediaStatus() {
+        if (mOnInfoListener != null) {
+            mOnInfoListener.onInfo(mMediaPlayer, mCurrentState, -1);
+        }
+    }
 
     private IMediaPlayer.OnInfoListener mInfoListener =
             new IMediaPlayer.OnInfoListener() {
@@ -507,6 +517,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                     Log.d(TAG, "Error: " + framework_err + "," + impl_err);
                     mCurrentState = MediaPlayerParams.STATE_ERROR;
                     mTargetState = MediaPlayerParams.STATE_ERROR;
+                    _notifyMediaStatus();
                     if (mMediaController != null) {
                         mMediaController.hide();
                     }
@@ -686,6 +697,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mMediaPlayer = null;
             // REMOVED: mPendingSubtitleTracks.clear();
             mCurrentState = MediaPlayerParams.STATE_IDLE;
+            _notifyMediaStatus();
             if (cleartargetstate) {
                 mTargetState = MediaPlayerParams.STATE_IDLE;
             }
@@ -768,6 +780,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         if (isInPlaybackState()) {
             mMediaPlayer.start();
             mCurrentState = MediaPlayerParams.STATE_PLAYING;
+            _notifyMediaStatus();
         }
         mTargetState = MediaPlayerParams.STATE_PLAYING;
     }
@@ -778,6 +791,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
                 mCurrentState = MediaPlayerParams.STATE_PAUSED;
+                _notifyMediaStatus();
             }
         }
         mTargetState = MediaPlayerParams.STATE_PAUSED;
