@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
 
 import com.dl7.playerview.media.PlayerView;
 
@@ -15,6 +18,8 @@ public class IjkPlayerActivity extends AppCompatActivity {
     private static final String IMAGE_URL = "http://cdn.pcbeta.attachment.inimc.com/data/attachment/forum/201205/15/073132nwznnmjixknqw0wj.jpg";
     Toolbar mToolbar;
     private PlayerView mPlayerView;
+    private EditText mEditText;
+    private ImageView mIvSend;
 
 
     @Override
@@ -23,6 +28,8 @@ public class IjkPlayerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ijk_player);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mPlayerView = (PlayerView) findViewById(R.id.player_view);
+        mEditText = (EditText) findViewById(R.id.et_danmaku_text);
+        mIvSend = (ImageView) findViewById(R.id.iv_send_danmaku);
         setSupportActionBar(mToolbar);
         mToolbar.setTitle("Video Player");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -30,8 +37,16 @@ public class IjkPlayerActivity extends AppCompatActivity {
 //        mPlayerView.init().setVideoPath(VIDEO_URL).start();
         mPlayerView.init()
                 .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
-                .setSkipTip(1000*60*3)
+                .setDanmakuSource(getResources().openRawResource(R.raw.comments))
                 .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
+
+        mIvSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPlayerView.sendDanmaku(mEditText.getText().toString(), false);
+                mEditText.setText("");
+            }
+        });
     }
 
     @Override

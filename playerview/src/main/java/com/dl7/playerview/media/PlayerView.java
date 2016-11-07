@@ -1503,7 +1503,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     private IDanmakuView mDanmakuView;
     private ImageView mIvDanmakuControl;
-    private DanmakuContext mContext;
+    private DanmakuContext mDanmakuContext;
     private BaseDanmakuParser mParser;
     private boolean mIsDanmakuStart = false;
 
@@ -1519,8 +1519,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 //        overlappingEnablePair.put(BaseDanmaku.TYPE_SCROLL_RL, true);
 //        overlappingEnablePair.put(BaseDanmaku.TYPE_FIX_TOP, true);
         // 配置参数
-        mContext = DanmakuContext.create();
-//        mContext.setDanmakuStyle(IDisplayer.DANMAKU_STYLE_STROKEN, 3)
+        mDanmakuContext = DanmakuContext.create();
+//        mDanmakuContext.setDanmakuStyle(IDisplayer.DANMAKU_STYLE_STROKEN, 3)
 //                .setDuplicateMergingEnabled(false)
 //                .setScrollSpeedFactor(1.2f)
 //                .setScaleTextSize(1.2f)
@@ -1553,7 +1553,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 }
             });
             mDanmakuView.enableDanmakuDrawingCache(true);
-            mDanmakuView.prepare(mParser, mContext);
+            mDanmakuView.prepare(mParser, mDanmakuContext);
         }
     }
 
@@ -1579,13 +1579,30 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         return parser;
     }
 
+    public PlayerView setDanmakuSource(InputStream stream) {
+        if (stream == null) {
+            return this;
+        }
+        ILoader loader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
+        try {
+            loader.load(stream);
+        } catch (IllegalDataException e) {
+            e.printStackTrace();
+        }
+        mParser = new BiliDanmukuParser();
+        IDataSource<?> dataSource = loader.getDataSource();
+        mParser.load(dataSource);
+        mDanmakuView.prepare(mParser, mDanmakuContext);
+        return this;
+    }
+
     /**
      * 添加一条弹幕
      *
      * @param isLive 是否直播
      */
     private void addDanmaku(boolean isLive) {
-        BaseDanmaku danmaku = mContext.mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
+        BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
         if (danmaku == null || mDanmakuView == null) {
             return;
         }
@@ -1601,6 +1618,24 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         danmaku.textShadowColor = Color.WHITE;
         // danmaku.underlineColor = Color.GREEN;
         danmaku.borderColor = Color.GREEN;
+        mDanmakuView.addDanmaku(danmaku);
+    }
+
+
+    public void sendDanmaku(String text, boolean isLive) {
+        BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
+        if (danmaku == null || mDanmakuView == null) {
+            return;
+        }
+        danmaku.text = text;
+        danmaku.padding = 5;
+        danmaku.isLive = isLive;
+        danmaku.priority = 0;  // 可能会被各种过滤器过滤并隐藏显示
+        Log.e("TTAG", ""+danmaku.textSize);
+        danmaku.textSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
+        danmaku.textColor = Color.WHITE;
+        danmaku.underlineColor = Color.GREEN;
+        danmaku.setTime(mDanmakuView.getCurrentTime());
         mDanmakuView.addDanmaku(danmaku);
     }
 

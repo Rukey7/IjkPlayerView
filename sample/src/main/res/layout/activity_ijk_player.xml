@@ -20,7 +20,33 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"/>
 
+    <LinearLayout
+        android:id="@+id/ll_danmaku_layout"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:background="#666666"
+        android:layout_height="wrap_content">
 
+        <EditText
+            android:id="@+id/et_danmaku_text"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_margin="5dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:hint="发射弹幕"
+            android:textColor="@android:color/black"
+            android:background="@drawable/shape_edit_bg"
+            android:layout_height="wrap_content"/>
+
+        <ImageView
+            android:id="@+id/iv_send_danmaku"
+            android:layout_width="wrap_content"
+            android:src="@mipmap/ic_danmaku_send"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
