@@ -24,7 +24,7 @@
         android:id="@+id/ll_danmaku_layout"
         android:layout_width="match_parent"
         android:orientation="horizontal"
-        android:background="#666666"
+        android:background="#88666666"
         android:layout_height="wrap_content">
 
         <EditText

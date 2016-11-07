@@ -37,6 +37,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
 //        mPlayerView.init().setVideoPath(VIDEO_URL).start();
         mPlayerView.init()
                 .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
+                .enableDanmaku()
                 .setDanmakuSource(getResources().openRawResource(R.raw.comments))
                 .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
 

@@ -166,7 +166,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private int mInitHeight;
     // 屏幕宽/高度
     private int mWidthPixels;
-    private int mHeightPixels;
     // 屏幕UI可见性
     private int mScreenUiVisibility;
     // 屏幕旋转角度监听
@@ -218,7 +217,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
         _initMediaQuality();
         _initVideoSkip();
-        _initDanmaku();
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
@@ -275,7 +273,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (mInitHeight == 0) {
             mInitHeight = getHeight();
             mWidthPixels = getResources().getDisplayMetrics().widthPixels;
-            mHeightPixels = getResources().getDisplayMetrics().heightPixels;
         }
     }
 
@@ -557,6 +554,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (!isTouchLock) {
             mIvPlayerLock.setVisibility(View.GONE);
         }
+        if (mIsEnableDanmaku) {
+            mDanmakuPlayerSeek.setVisibility(GONE);
+        }
     }
 
     /**
@@ -576,10 +576,16 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 mFullscreenTopBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
                 mWindowTopBar.setVisibility(View.GONE);
                 mIvPlayerLock.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
+                if (mIsEnableDanmaku) {
+                    mDanmakuPlayerSeek.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
+                }
             } else {
                 mWindowTopBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
                 mFullscreenTopBar.setVisibility(View.GONE);
                 mIvPlayerLock.setVisibility(View.GONE);
+                if (mIsEnableDanmaku) {
+                    mDanmakuPlayerSeek.setVisibility(GONE);
+                }
             }
         }
     }
@@ -652,6 +658,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             }
             mFullscreenTopBar.setVisibility(View.VISIBLE);
             mLlBottomBar.setVisibility(View.VISIBLE);
+            if (mIsEnableDanmaku) {
+                mDanmakuPlayerSeek.setVisibility(VISIBLE);
+            }
         }
     }
 
@@ -701,7 +710,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             _hideSkipTip();
             _setProgress();
         } else if (id == R.id.iv_danmaku_control) {
-            _toggleDanmakuView();
+            _toggleDanmakuShow();
         }
     }
 
@@ -725,6 +734,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     private void _setFullScreen(boolean isFullscreen) {
         mIsFullscreen = isFullscreen;
+        // 处理弹幕相关视图
+        _toggleDanmakuView(isFullscreen);
         if (isFullscreen) {
             _handleActionBar(true);
             _changeHeight(true);
@@ -732,7 +743,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mIvFullscreen.setSelected(true);
             mWindowTopBar.setVisibility(View.GONE);
             mIvMediaQuality.setVisibility(VISIBLE);
-            mIvDanmakuControl.setVisibility(VISIBLE);
             if (mIsShowBar) {
                 mFullscreenTopBar.setVisibility(View.VISIBLE);
                 mIvPlayerLock.setVisibility(VISIBLE);
@@ -745,7 +755,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 mWindowTopBar.setVisibility(View.VISIBLE);
             }
             mIvMediaQuality.setVisibility(GONE);
-            mIvDanmakuControl.setVisibility(GONE);
             mFullscreenTopBar.setVisibility(View.GONE);
             mIvPlayerLock.setVisibility(GONE);
             if (mIsShowQuality) {
@@ -914,6 +923,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         @Override
         public boolean onDoubleTap(MotionEvent e) {
             if (!mIsForbidTouch) {
+                _refreshHideRunnable();
                 _togglePlayStatus();
             }
             return true;
@@ -966,10 +976,16 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             // use long to avoid overflow，转换为 Seek 显示的进度值
             long pos = (long) MAX_VIDEO_SEEK * position / duration;
             mPlayerSeek.setProgress((int) pos);
+            if (mIsEnableDanmaku) {
+                mDanmakuPlayerSeek.setProgress((int) pos);
+            }
         }
         // 获取缓冲的进度百分比，并显示在 Seek 的次进度
         int percent = mVideoView.getBufferPercentage();
         mPlayerSeek.setSecondaryProgress(percent * 10);
+        if (mIsEnableDanmaku) {
+            mDanmakuPlayerSeek.setSecondaryProgress(percent * 10);
+        }
         // 更新播放时间
         mTvEndTime.setText(generateTime(duration));
         mTvCurTime.setText(generateTime(position));
@@ -1147,6 +1163,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             // 更新视频播放进度
             seekTo((int) mTargetPosition);
             mPlayerSeek.setProgress((int) (mTargetPosition * MAX_VIDEO_SEEK / mVideoView.getDuration()));
+            if (mIsEnableDanmaku) {
+                mDanmakuPlayerSeek.setProgress((int) (mTargetPosition * MAX_VIDEO_SEEK / mVideoView.getDuration()));
+            }
             mTargetPosition = INVALID_VALUE;
         }
         // 隐藏触摸操作显示图像
@@ -1503,14 +1522,34 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     private IDanmakuView mDanmakuView;
     private ImageView mIvDanmakuControl;
+    private TextView mTvSendDanmaku;
+    private SeekBar mDanmakuPlayerSeek;
+    private TextView mTvTimeSeparator;
     private DanmakuContext mDanmakuContext;
     private BaseDanmakuParser mParser;
-    private boolean mIsDanmakuStart = false;
+    private boolean mIsEnableDanmaku = false;
+
+    /**
+     * 启动弹幕功能
+     *
+     * @return
+     */
+    public PlayerView enableDanmaku() {
+        mIsEnableDanmaku = true;
+        _initDanmaku();
+        return this;
+    }
 
     private void _initDanmaku() {
         mDanmakuView = (IDanmakuView) findViewById(R.id.sv_danmaku);
         mIvDanmakuControl = (ImageView) findViewById(R.id.iv_danmaku_control);
+        mTvSendDanmaku = (TextView) findViewById(R.id.tv_send_danmaku);
+        mTvTimeSeparator = (TextView) findViewById(R.id.tv_separator);
+        mDanmakuPlayerSeek = (SeekBar) findViewById(R.id.danmaku_player_seek);
+        mDanmakuPlayerSeek.setMax(MAX_VIDEO_SEEK);
+        mDanmakuPlayerSeek.setOnSeekBarChangeListener(mSeekListener);
         mIvDanmakuControl.setOnClickListener(this);
+        mTvSendDanmaku.setOnClickListener(this);
         // 设置最大显示行数
 //        HashMap<Integer, Integer> maxLinesPair = new HashMap<Integer, Integer>();
 //        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_RL, 5); // 滚动弹幕最大显示5行
@@ -1583,6 +1622,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (stream == null) {
             return this;
         }
+        if (!mIsEnableDanmaku) {
+            throw new RuntimeException("Danmaku is disable, use enableDanmaku() first");
+        }
         ILoader loader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
         try {
             loader.load(stream);
@@ -1623,6 +1665,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
 
     public void sendDanmaku(String text, boolean isLive) {
+        if (!mIsEnableDanmaku) {
+            throw new RuntimeException("Danmaku is disable, use enableDanmaku() first");
+        }
         BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
         if (danmaku == null || mDanmakuView == null) {
             return;
@@ -1631,7 +1676,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         danmaku.padding = 5;
         danmaku.isLive = isLive;
         danmaku.priority = 0;  // 可能会被各种过滤器过滤并隐藏显示
-        Log.e("TTAG", ""+danmaku.textSize);
+        Log.e("TTAG", "" + danmaku.textSize);
         danmaku.textSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
         danmaku.textColor = Color.WHITE;
         danmaku.underlineColor = Color.GREEN;
@@ -1641,7 +1686,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     private void _resumeDanmaku() {
         if (mDanmakuView != null && mDanmakuView.isPrepared() && mDanmakuView.isPaused()) {
-            Log.d("TTAG", "_resumeDanmaku");
             mDanmakuView.resume();
         }
     }
@@ -1652,7 +1696,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
-    private void _toggleDanmakuView() {
+    private void _toggleDanmakuShow() {
         if (mIvDanmakuControl.isSelected()) {
             showOrHideDanmaku(true);
         } else {
@@ -1660,15 +1704,32 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
+    private void _toggleDanmakuView(boolean isShow) {
+        if (mIsEnableDanmaku) {
+            if (isShow) {
+                mIvDanmakuControl.setVisibility(VISIBLE);
+                mTvSendDanmaku.setVisibility(VISIBLE);
+                mTvTimeSeparator.setVisibility(VISIBLE);
+                mDanmakuPlayerSeek.setVisibility(VISIBLE);
+                mPlayerSeek.setVisibility(GONE);
+            } else {
+                mIvDanmakuControl.setVisibility(GONE);
+                mTvSendDanmaku.setVisibility(GONE);
+                mTvTimeSeparator.setVisibility(GONE);
+                mDanmakuPlayerSeek.setVisibility(GONE);
+                mPlayerSeek.setVisibility(VISIBLE);
+            }
+        }
+
+    }
+
     public PlayerView showOrHideDanmaku(boolean isShow) {
         if (isShow) {
             mIvDanmakuControl.setSelected(false);
             mDanmakuView.show();
-            Log.w("TTAG", "show");
         } else {
             mIvDanmakuControl.setSelected(true);
             mDanmakuView.hide();
-            Log.w("TTAG", "hide");
         }
         return this;
     }
