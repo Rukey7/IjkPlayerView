@@ -700,6 +700,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mHandler.removeCallbacks(mHideSkipTipRunnable);
             _hideSkipTip();
             _setProgress();
+        } else if (id == R.id.iv_danmaku_control) {
+            _toggleDanmakuView();
         }
     }
 
@@ -730,6 +732,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mIvFullscreen.setSelected(true);
             mWindowTopBar.setVisibility(View.GONE);
             mIvMediaQuality.setVisibility(VISIBLE);
+            mIvDanmakuControl.setVisibility(VISIBLE);
             if (mIsShowBar) {
                 mFullscreenTopBar.setVisibility(View.VISIBLE);
                 mIvPlayerLock.setVisibility(VISIBLE);
@@ -742,6 +745,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 mWindowTopBar.setVisibility(View.VISIBLE);
             }
             mIvMediaQuality.setVisibility(GONE);
+            mIvDanmakuControl.setVisibility(GONE);
             mFullscreenTopBar.setVisibility(View.GONE);
             mIvPlayerLock.setVisibility(GONE);
             if (mIsShowQuality) {
@@ -1155,6 +1159,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * ============================ 播放状态控制 ============================
      */
 
+    // 这个用来控制弹幕启动和视频同步
+    private boolean mIsRenderingStart = false;
+
+    // 视频播放状态监听
     private OnInfoListener mInfoListener = new OnInfoListener() {
         @Override
         public boolean onInfo(IMediaPlayer iMediaPlayer, int status, int extra) {
@@ -1180,26 +1188,27 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 if (!mIsNeverPlay) {
                     mLoadingView.setVisibility(View.VISIBLE);
                 }
-                Log.i("TTAG", "status " + mVideoView.isPlaying());
                 break;
 
             case IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:
+                mIsRenderingStart = true;
             case IMediaPlayer.MEDIA_INFO_BUFFERING_END:
                 mLoadingView.setVisibility(View.GONE);
                 mPlayerThumb.setVisibility(View.GONE);
                 // 更新进度
                 mHandler.sendEmptyMessage(MSG_UPDATE_SEEK);
                 if (mSkipPosition != INVALID_VALUE) {
-                    _showSkipTip();
+                    _showSkipTip(); // 显示跳转提示
                 }
                 if (mVideoView.isPlaying()) {
-                    Log.w("TTAG", "_resumeDanmaku ");
-                    _resumeDanmaku();
+                    _resumeDanmaku();   // 开启弹幕
                 }
                 break;
 
             case MediaPlayerParams.STATE_PLAYING:
-                _resumeDanmaku();
+                if (mIsRenderingStart) {
+                    _resumeDanmaku();   // 开启弹幕
+                }
                 break;
             case MediaPlayerParams.STATE_ERROR:
                 break;
@@ -1406,12 +1415,20 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * ============================ 跳转提示 ============================
      */
 
+    // 取消跳转
     private ImageView mIvCancelSkip;
+    // 跳转时间
     private TextView mTvSkipTime;
+    // 执行跳转
     private TextView mTvDoSkip;
+    // 跳转布局
     private View mLlSkipLayout;
+    // 跳转目标时间
     private int mSkipPosition = INVALID_VALUE;
 
+    /**
+     * 跳转提示初始化
+     */
     private void _initVideoSkip() {
         mLlSkipLayout = findViewById(R.id.ll_skip_layout);
         mIvCancelSkip = (ImageView) findViewById(R.id.iv_cancel_skip);
@@ -1485,12 +1502,15 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
 
     private IDanmakuView mDanmakuView;
+    private ImageView mIvDanmakuControl;
     private DanmakuContext mContext;
     private BaseDanmakuParser mParser;
     private boolean mIsDanmakuStart = false;
 
     private void _initDanmaku() {
         mDanmakuView = (IDanmakuView) findViewById(R.id.sv_danmaku);
+        mIvDanmakuControl = (ImageView) findViewById(R.id.iv_danmaku_control);
+        mIvDanmakuControl.setOnClickListener(this);
         // 设置最大显示行数
 //        HashMap<Integer, Integer> maxLinesPair = new HashMap<Integer, Integer>();
 //        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_RL, 5); // 滚动弹幕最大显示5行
@@ -1509,7 +1529,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 //                .preventOverlapping(overlappingEnablePair);
         //
         if (mDanmakuView != null) {
-            mParser = createParser(this.getResources().openRawResource(R.raw.comments));
+            mParser = createParser(null);
             mDanmakuView.setCallback(new DrawHandler.Callback() {
                 @Override
                 public void updateTimer(DanmakuTimer timer) {
@@ -1517,7 +1537,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
                 @Override
                 public void drawingFinished() {
-
                 }
 
                 @Override
@@ -1598,11 +1617,23 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
+    private void _toggleDanmakuView() {
+        if (mIvDanmakuControl.isSelected()) {
+            showOrHideDanmaku(true);
+        } else {
+            showOrHideDanmaku(false);
+        }
+    }
+
     public PlayerView showOrHideDanmaku(boolean isShow) {
         if (isShow) {
+            mIvDanmakuControl.setSelected(false);
             mDanmakuView.show();
+            Log.w("TTAG", "show");
         } else {
+            mIvDanmakuControl.setSelected(true);
             mDanmakuView.hide();
+            Log.w("TTAG", "hide");
         }
         return this;
     }

@@ -44,9 +44,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginRight="5dp"
             android:text="00:00"
             android:textColor="@android:color/white"
             android:textSize="16sp"/>
+
+        <ImageView
+            android:id="@+id/iv_danmaku_control"
+            android:layout_width="wrap_content"
+            android:src="@drawable/sel_danmaku_btn"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:visibility="gone"
+            android:layout_height="wrap_content"/>
 
         <TextView
             android:id="@+id/iv_media_quality"
@@ -54,7 +64,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:padding="5dp"
-            android:layout_marginLeft="3dp"
             android:text="自动"
             android:textSize="10dp"
             android:gravity="center"
