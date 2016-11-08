@@ -40,8 +40,6 @@ public class SoftInputUtils {
      * @param view    编辑控件
      */
     public static void setEditFocusable(final Context context, final View view) {
-        view.setFocusable(true);
-        view.setFocusable(true);
         view.setFocusableInTouchMode(true);
         view.requestFocus();
         InputMethodManager inputMethodManager = (InputMethodManager) context

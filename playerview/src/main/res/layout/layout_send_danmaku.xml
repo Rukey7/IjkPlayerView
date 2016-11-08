@@ -7,9 +7,9 @@
         android:id="@+id/ll_edit_danmaku"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
         android:background="@android:color/transparent"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <ImageView
             android:id="@+id/iv_cancel_send"
@@ -24,16 +24,17 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="输入弹幕内容"
-            android:singleLine="true"
             android:imeOptions="flagNoExtractUi|flagNoEnterAction|flagNoFullscreen"
+            android:singleLine="true"
             android:textColor="@color/text_content"
             android:textColorHint="@color/text_hint"/>
 
         <ImageView
-            android:id="@+id/iv_send"
+            android:id="@+id/iv_do_send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="5dp"
+            android:layout_marginRight="@dimen/navigation_height"
             android:src="@mipmap/ic_send_blue_grey_500_36dp"/>
     </LinearLayout>
 </merge>

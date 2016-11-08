@@ -2,4 +2,5 @@
 <resources>
 
     <dimen name="control_bar_height">46dp</dimen>
+    <dimen name="navigation_height">48dp</dimen>
 </resources>

@@ -1,12 +1,12 @@
 package com.dl7.player;
 
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -23,24 +23,27 @@ public class IjkPlayerActivity extends AppCompatActivity {
     private ImageView mIvSend;
 
     @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus && Build.VERSION.SDK_INT >= 19) {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        }
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ijk_player);
+        final View rootView = getLayoutInflater().from(this).inflate(R.layout.activity_ijk_player, null);
+        setContentView(rootView);
+        /**虚拟按键的隐藏方法*/
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            @Override
+            public void onGlobalLayout() {
+//                //比较Activity根布局与当前布局的大小
+//                int heightDiff = rootView.getRootView().getHeight() - rootView.getHeight();
+//                if (heightDiff > 100) {
+//                    //大小超过100时，一般为显示虚拟键盘事件
+//                    rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+//                } else {
+//                    //大小小于100时，为不显示虚拟键盘或虚拟键盘隐藏
+//                    rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+//                }
+            }
+        });
+
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mPlayerView = (PlayerView) findViewById(R.id.player_view);
         mEditText = (EditText) findViewById(R.id.et_danmaku_text);

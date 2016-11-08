@@ -195,6 +195,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         } else {
             throw new IllegalArgumentException("Context must be AppCompatActivity");
         }
+        mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         View.inflate(context, R.layout.layout_player_view, this);
         mVideoView = (IjkVideoView) findViewById(R.id.video_view);
         mPlayerThumb = (ImageView) findViewById(R.id.iv_thumb);
@@ -715,8 +716,15 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             _toggleDanmakuShow();
         } else if (id == R.id.tv_send_danmaku) {
             _hideAllView(false);
+            mIsShowBar = false;
             mEditDanmakuLayout.setVisibility(VISIBLE);
             SoftInputUtils.setEditFocusable(mAttachActivity, mEtDanmakuContent);
+        } else if (id == R.id.iv_cancel_send) {
+            mEditDanmakuLayout.clearFocus();
+            mFlVideoBox.requestFocus();
+            mEditDanmakuLayout.setVisibility(GONE);
+            SoftInputUtils.closeSoftInput(mAttachActivity);
+            _setUiLayoutFullscreen();
         }
     }
 
@@ -828,6 +836,24 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
+     * 设置UI沉浸式显示
+     */
+    private void _setUiLayoutFullscreen() {
+        if (Build.VERSION.SDK_INT >= 19) {
+            // 获取关联 Activity 的 DecorView
+            View decorView = mAttachActivity.getWindow().getDecorView();
+            // 沉浸式使用这些Flag
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                    View.SYSTEM_UI_FLAG_FULLSCREEN |
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            );
+        }
+    }
+
+    /**
      * 屏幕翻转后的处理，在 Activity.configurationChanged() 调用
      * SYSTEM_UI_FLAG_LAYOUT_STABLE：维持一个稳定的布局
      * SYSTEM_UI_FLAG_FULLSCREEN：Activity全屏显示，且状态栏被隐藏覆盖掉
@@ -855,6 +881,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                         View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                 );
+
                 _setFullScreen(true);
             } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
                 View decorView = mAttachActivity.getWindow().getDecorView();
@@ -1533,6 +1560,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private TextView mTvTimeSeparator;
     private View mEditDanmakuLayout;
     private EditText mEtDanmakuContent;
+    private ImageView mIvCancelSend;
+    private ImageView mIvDoSend;
 
     private DanmakuContext mDanmakuContext;
     private BaseDanmakuParser mParser;
@@ -1556,17 +1585,15 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mTvTimeSeparator = (TextView) findViewById(R.id.tv_separator);
         mEditDanmakuLayout = findViewById(R.id.ll_edit_danmaku);
         mEtDanmakuContent = (EditText) findViewById(R.id.et_danmaku_content);
+        mIvCancelSend = (ImageView) findViewById(R.id.iv_cancel_send);
+        mIvDoSend = (ImageView) findViewById(R.id.iv_do_send);
         mDanmakuPlayerSeek = (SeekBar) findViewById(R.id.danmaku_player_seek);
         mDanmakuPlayerSeek.setMax(MAX_VIDEO_SEEK);
         mDanmakuPlayerSeek.setOnSeekBarChangeListener(mSeekListener);
         mIvDanmakuControl.setOnClickListener(this);
         mTvSendDanmaku.setOnClickListener(this);
-        mEtDanmakuContent.setOnFocusChangeListener(new OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                Log.w("TTAG", "onFocusChange "+hasFocus);
-            }
-        });
+        mIvCancelSend.setOnClickListener(this);
+        mIvDoSend.setOnClickListener(this);
         // 设置最大显示行数
 //        HashMap<Integer, Integer> maxLinesPair = new HashMap<Integer, Integer>();
 //        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_RL, 5); // 滚动弹幕最大显示5行
