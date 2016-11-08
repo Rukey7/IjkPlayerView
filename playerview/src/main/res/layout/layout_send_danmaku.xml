@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/ll_edit_danmaku"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="@android:color/transparent"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/iv_cancel_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:src="@mipmap/ic_cancel_black_36dp"/>
+
+        <EditText
+            android:id="@+id/et_danmaku_content"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="输入弹幕内容"
+            android:singleLine="true"
+            android:imeOptions="flagNoExtractUi|flagNoEnterAction|flagNoFullscreen"
+            android:textColor="@color/text_content"
+            android:textColorHint="@color/text_hint"/>
+
+        <ImageView
+            android:id="@+id/iv_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:src="@mipmap/ic_send_blue_grey_500_36dp"/>
+    </LinearLayout>
+</merge>

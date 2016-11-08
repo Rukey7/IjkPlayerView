@@ -26,6 +26,7 @@
         <activity android:name="com.dl7.player.MediaPlayerActivity">
         </activity>
         <activity android:name="com.dl7.player.IjkPlayerActivity"
+                  android:windowSoftInputMode="adjustNothing"
                   android:configChanges="orientation|keyboardHidden|screenSize">
         </activity>
     </application>

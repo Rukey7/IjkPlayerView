@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -38,6 +39,7 @@ import android.widget.TextView;
 
 import com.dl7.playerview.R;
 import com.dl7.playerview.utils.AnimHelper;
+import com.dl7.playerview.utils.SoftInputUtils;
 import com.dl7.playerview.utils.WindowUtils;
 
 import java.io.InputStream;
@@ -711,6 +713,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             _setProgress();
         } else if (id == R.id.iv_danmaku_control) {
             _toggleDanmakuShow();
+        } else if (id == R.id.tv_send_danmaku) {
+            _hideAllView(false);
+            mEditDanmakuLayout.setVisibility(VISIBLE);
+            SoftInputUtils.setEditFocusable(mAttachActivity, mEtDanmakuContent);
         }
     }
 
@@ -1525,6 +1531,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private TextView mTvSendDanmaku;
     private SeekBar mDanmakuPlayerSeek;
     private TextView mTvTimeSeparator;
+    private View mEditDanmakuLayout;
+    private EditText mEtDanmakuContent;
+
     private DanmakuContext mDanmakuContext;
     private BaseDanmakuParser mParser;
     private boolean mIsEnableDanmaku = false;
@@ -1545,11 +1554,19 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIvDanmakuControl = (ImageView) findViewById(R.id.iv_danmaku_control);
         mTvSendDanmaku = (TextView) findViewById(R.id.tv_send_danmaku);
         mTvTimeSeparator = (TextView) findViewById(R.id.tv_separator);
+        mEditDanmakuLayout = findViewById(R.id.ll_edit_danmaku);
+        mEtDanmakuContent = (EditText) findViewById(R.id.et_danmaku_content);
         mDanmakuPlayerSeek = (SeekBar) findViewById(R.id.danmaku_player_seek);
         mDanmakuPlayerSeek.setMax(MAX_VIDEO_SEEK);
         mDanmakuPlayerSeek.setOnSeekBarChangeListener(mSeekListener);
         mIvDanmakuControl.setOnClickListener(this);
         mTvSendDanmaku.setOnClickListener(this);
+        mEtDanmakuContent.setOnFocusChangeListener(new OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                Log.w("TTAG", "onFocusChange "+hasFocus);
+            }
+        });
         // 设置最大显示行数
 //        HashMap<Integer, Integer> maxLinesPair = new HashMap<Integer, Integer>();
 //        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_RL, 5); // 滚动弹幕最大显示5行

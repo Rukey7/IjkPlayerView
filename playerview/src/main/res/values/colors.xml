@@ -11,4 +11,7 @@
 
     <color name="media_quality_selected">#ccec407a</color>
     <color name="video_skip">#e91e63</color>
+
+    <color name="text_hint">#999999</color>
+    <color name="text_content">#333333</color>
 </resources>
