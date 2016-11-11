@@ -5,36 +5,43 @@
 
     <LinearLayout
         android:id="@+id/ll_edit_danmaku"
+        android:orientation="vertical"
+        android:background="@color/bg_video_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:orientation="horizontal"
-        android:visibility="gone">
+        android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/iv_cancel_send"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="5dp"
-            android:src="@mipmap/ic_cancel_black_36dp"/>
+            android:orientation="horizontal"
+            android:visibility="visible">
 
-        <EditText
-            android:id="@+id/et_danmaku_content"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="输入弹幕内容"
-            android:imeOptions="flagNoExtractUi|flagNoEnterAction|flagNoFullscreen"
-            android:singleLine="true"
-            android:textColor="@color/text_content"
-            android:textColorHint="@color/text_hint"/>
+            <ImageView
+                android:id="@+id/iv_cancel_send"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:src="@mipmap/ic_cancel_black_36dp"/>
 
-        <ImageView
-            android:id="@+id/iv_do_send"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="5dp"
-            android:layout_marginRight="@dimen/navigation_height"
-            android:src="@mipmap/ic_send_blue_grey_500_36dp"/>
+            <EditText
+                android:id="@+id/et_danmaku_content"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="输入弹幕内容"
+                android:imeOptions="flagNoExtractUi|flagNoEnterAction|flagNoFullscreen"
+                android:singleLine="true"
+                android:textColor="@color/text_content"
+                android:textColorHint="@color/text_hint"/>
+
+            <ImageView
+                android:id="@+id/iv_do_send"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:layout_marginRight="@dimen/navigation_height"
+                android:src="@mipmap/ic_send_blue_grey_500_36dp"/>
+        </LinearLayout>
     </LinearLayout>
+
 </merge>
