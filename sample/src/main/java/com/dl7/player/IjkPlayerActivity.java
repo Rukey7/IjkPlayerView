@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -25,25 +24,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final View rootView = getLayoutInflater().from(this).inflate(R.layout.activity_ijk_player, null);
-        setContentView(rootView);
-        /**虚拟按键的隐藏方法*/
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-
-            @Override
-            public void onGlobalLayout() {
-//                //比较Activity根布局与当前布局的大小
-//                int heightDiff = rootView.getRootView().getHeight() - rootView.getHeight();
-//                if (heightDiff > 100) {
-//                    //大小超过100时，一般为显示虚拟键盘事件
-//                    rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-//                } else {
-//                    //大小小于100时，为不显示虚拟键盘或虚拟键盘隐藏
-//                    rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-//                }
-            }
-        });
-
+        setContentView(R.layout.activity_ijk_player);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mPlayerView = (PlayerView) findViewById(R.id.player_view);
         mEditText = (EditText) findViewById(R.id.et_danmaku_text);
@@ -56,6 +37,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
         mPlayerView.init()
                 .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
                 .enableDanmaku()
+                .setTitle("这是个跑马灯哦，跑马灯，跑马灯。。。")
 //                .setDanmakuSource(getResources().openRawResource(R.raw.comments))
                 .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
 

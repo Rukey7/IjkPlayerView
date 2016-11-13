@@ -195,7 +195,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         } else {
             throw new IllegalArgumentException("Context must be AppCompatActivity");
         }
-        mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         View.inflate(context, R.layout.layout_player_view, this);
         mVideoView = (IjkVideoView) findViewById(R.id.video_view);
         mPlayerThumb = (ImageView) findViewById(R.id.iv_thumb);
@@ -615,7 +614,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private void _showControlBar(int timeout) {
         if (!mIsShowBar) {
             _setProgress();
-            mIvPlay.requestFocus();
             mIsShowBar = true;
         }
         _setControlBarVisible(true);
@@ -715,16 +713,17 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         } else if (id == R.id.iv_danmaku_control) {
             _toggleDanmakuShow();
         } else if (id == R.id.tv_send_danmaku) {
+            editDanmaku();
             _hideAllView(false);
             mIsShowBar = false;
             mEditDanmakuLayout.setVisibility(VISIBLE);
             SoftInputUtils.setEditFocusable(mAttachActivity, mEtDanmakuContent);
         } else if (id == R.id.iv_cancel_send) {
-            mEditDanmakuLayout.clearFocus();
-            mFlVideoBox.requestFocus();
-            mEditDanmakuLayout.setVisibility(GONE);
-            SoftInputUtils.closeSoftInput(mAttachActivity);
-            _setUiLayoutFullscreen();
+            recoverFromEditDanmaku();
+        } else if (id == R.id.iv_do_send) {
+            recoverFromEditDanmaku();
+            sendDanmaku(mEtDanmakuContent.getText().toString(), false);
+            mEtDanmakuContent.setText("");
         }
     }
 
@@ -881,13 +880,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                         View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                 );
-
                 _setFullScreen(true);
+                mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
                 View decorView = mAttachActivity.getWindow().getDecorView();
                 // 还原
                 decorView.setSystemUiVisibility(mScreenUiVisibility);
                 _setFullScreen(false);
+                mAttachActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             }
         }
     }
@@ -904,10 +904,13 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         private boolean isVolume;
         // 是否横向滑动，默认为纵向滑动，true为横向滑动，false为纵向滑动
         private boolean isLandscape;
+        // 是否从弹幕编辑状态返回
+        private boolean isRecoverFromDanmaku;
 
         @Override
         public boolean onDown(MotionEvent e) {
             isDownTouch = true;
+            isRecoverFromDanmaku = recoverFromEditDanmaku();
             return super.onDown(e);
         }
 
@@ -945,6 +948,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
+            if (isRecoverFromDanmaku) {
+                return true;
+            }
             if (mIsShowQuality) {
                 _toggleMediaQuality();
             } else {
@@ -955,6 +961,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
         @Override
         public boolean onDoubleTap(MotionEvent e) {
+            if (isRecoverFromDanmaku) {
+                return true;
+            }
             if (!mIsForbidTouch) {
                 _refreshHideRunnable();
                 _togglePlayStatus();
@@ -981,6 +990,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         public boolean onTouch(View v, MotionEvent event) {
             if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
                 mHandler.removeCallbacks(mHideBarRunnable);
+                // 跑马灯效果需要获取到焦点
+                mTvTitle.requestFocus();
             }
             if (mGestureDetector.onTouchEvent(event)) {
                 return true;
@@ -1203,6 +1214,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
         // 隐藏触摸操作显示图像
         _hideTouchView();
+        _refreshHideRunnable();
         mCurVolume = INVALID_VALUE;
         mCurBrightness = INVALID_VALUE;
     }
@@ -1552,6 +1564,19 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * ============================  ============================
      */
 
+    private static final int NO_EDIT_DANMAKU = 201;
+    private static final int EDIT_DANMAKU_WHEN_PLAY = 202;
+    private static final int EDIT_DANMAKU_WHEN_PAUSE = 203;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @Target(ElementType.FIELD)
+    @IntDef({NO_EDIT_DANMAKU, EDIT_DANMAKU_WHEN_PLAY, EDIT_DANMAKU_WHEN_PAUSE})
+    @interface DanmakuStatus {
+    }
+
+    private
+    @DanmakuStatus
+    int mDanmakuStatus = NO_EDIT_DANMAKU;
 
     private IDanmakuView mDanmakuView;
     private ImageView mIvDanmakuControl;
@@ -1778,4 +1803,33 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         return this;
     }
 
+    private void _recoverScreen() {
+        mEditDanmakuLayout.clearFocus();
+        mEditDanmakuLayout.setVisibility(GONE);
+        SoftInputUtils.closeSoftInput(mAttachActivity);
+        _setUiLayoutFullscreen();
+    }
+
+    public void editDanmaku() {
+        if (mVideoView.isPlaying()) {
+            pause();
+            mDanmakuStatus = EDIT_DANMAKU_WHEN_PLAY;
+        } else {
+            mDanmakuStatus = EDIT_DANMAKU_WHEN_PAUSE;
+        }
+    }
+
+    public boolean recoverFromEditDanmaku() {
+        if (mDanmakuStatus == NO_EDIT_DANMAKU) {
+            return false;
+        }
+        if (mIsFullscreen) {
+            _recoverScreen();
+        }
+        if (mDanmakuStatus == EDIT_DANMAKU_WHEN_PLAY) {
+            start();
+        }
+        mDanmakuStatus = NO_EDIT_DANMAKU;
+        return true;
+    }
 }

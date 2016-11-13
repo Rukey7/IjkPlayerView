@@ -44,4 +44,7 @@ public class MediaPlayerParams {
     // 结束
     public static final int STATE_COMPLETED = 336;
 
+    /**
+     * ============================ 弹幕状态 ============================
+     */
 }
