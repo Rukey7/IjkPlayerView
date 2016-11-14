@@ -1,11 +1,15 @@
 package com.dl7.playerview.media;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -41,6 +45,7 @@ import com.dl7.playerview.R;
 import com.dl7.playerview.utils.AnimHelper;
 import com.dl7.playerview.utils.SoftInputUtils;
 import com.dl7.playerview.utils.WindowUtils;
+import com.dl7.playerview.widgets.MarqueeTextView;
 
 import java.io.InputStream;
 import java.lang.annotation.ElementType;
@@ -102,7 +107,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     // 全屏下的后退键
     private ImageView mIvBack;
     // 全屏下的标题
-    private TextView mTvTitle;
+    private MarqueeTextView mTvTitle;
     // 全屏下的TopBar
     private LinearLayout mFullscreenTopBar;
     // 窗口模式的后退键
@@ -204,7 +209,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mTvFastForward = (TextView) findViewById(R.id.tv_fast_forward);
         mFlTouchLayout = (FrameLayout) findViewById(R.id.fl_touch_layout);
         mIvBack = (ImageView) findViewById(R.id.iv_back);
-        mTvTitle = (TextView) findViewById(R.id.tv_title);
+        mTvTitle = (MarqueeTextView) findViewById(R.id.tv_title);
         mFullscreenTopBar = (LinearLayout) findViewById(R.id.fullscreen_top_bar);
         mIvBackWindow = (ImageView) findViewById(R.id.iv_back_window);
         mWindowTopBar = (FrameLayout) findViewById(R.id.window_top_bar);
@@ -219,6 +224,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
         _initMediaQuality();
         _initVideoSkip();
+        _initBatteryListener();
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
@@ -321,6 +327,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mDanmakuView.release();
             mDanmakuView = null;
         }
+        // 注销广播
+        mAttachActivity.unregisterReceiver(mBatteryReceiver);
         return curPosition;
     }
 
@@ -348,6 +356,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @return
      */
     public boolean onBackPressed() {
+        if (recoverFromEditDanmaku()) {
+            return true;
+        }
         if (mIsFullscreen) {
             mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             if (mIsForbidTouch) {
@@ -357,11 +368,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 _setControlBarVisible(mIsShowBar);
             }
             return true;
-        }
-        if (mDanmakuView != null) {
-            // don't forget release!
-            mDanmakuView.release();
-            mDanmakuView = null;
         }
         return false;
     }
@@ -990,8 +996,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         public boolean onTouch(View v, MotionEvent event) {
             if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
                 mHandler.removeCallbacks(mHideBarRunnable);
-                // 跑马灯效果需要获取到焦点
-                mTvTitle.requestFocus();
             }
             if (mGestureDetector.onTouchEvent(event)) {
                 return true;
@@ -1831,5 +1835,51 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
         mDanmakuStatus = NO_EDIT_DANMAKU;
         return true;
+    }
+
+    /**
+     * ============================ 电量、时间 ============================
+     */
+
+    private ProgressBar mPbBatteryLevel;
+    private TextView mTvSystemTime;
+    private BatteryBroadcastReceiver mBatteryReceiver;
+
+    /**
+     * 初始化电量监听
+     */
+    private void _initBatteryListener() {
+        mPbBatteryLevel = (ProgressBar) findViewById(R.id.pb_battery);
+        mTvSystemTime = (TextView) findViewById(R.id.tv_system_time);
+        mBatteryReceiver = new BatteryBroadcastReceiver();
+        //注册一个接受广播类型
+        mAttachActivity.registerReceiver(mBatteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    }
+
+    /**
+     * 接受电量改变广播
+     */
+    class BatteryBroadcastReceiver extends BroadcastReceiver {
+
+        private static final int BATTERY_LOW_LEVEL = 95;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)) {
+                int level = intent.getIntExtra("level", 0);
+                int scale = intent.getIntExtra("scale", 100);
+                int curPower = level * 100 / scale;
+                mPbBatteryLevel.setProgress(curPower);
+                int status = intent.getIntExtra("status", BatteryManager.BATTERY_HEALTH_UNKNOWN);
+                if (status == BatteryManager.BATTERY_STATUS_CHARGING) {
+                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_player_battery_charging);
+                } else if (curPower < BATTERY_LOW_LEVEL) {
+                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_player_battery_red);
+                } else {
+                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_player_battery);
+                }
+            }
+        }
     }
 }

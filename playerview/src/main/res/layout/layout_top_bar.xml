@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:background="@color/bg_video_view"
         android:orientation="horizontal"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <ImageView
             android:id="@+id/iv_back"
@@ -19,19 +19,36 @@
             android:padding="5dp"
             android:src="@mipmap/ic_back"/>
 
-        <TextView
+        <com.dl7.playerview.widgets.MarqueeTextView
             android:id="@+id/tv_title"
-            android:layout_width="200dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="标题"
+            android:layout_weight="1"
+            android:ellipsize="marquee"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:singleLine="true"
-            android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
+            android:text="标题"
             android:textColor="@android:color/white"
             android:textSize="18sp"/>
+
+        <ProgressBar
+            android:id="@+id/pb_battery"
+            style="@style/ProgressBar_Battery"
+            android:layout_gravity="center"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:max="100"/>
+
+        <TextView
+            android:id="@+id/tv_system_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dp"
+            android:textSize="16sp"/>
     </LinearLayout>
 
     <FrameLayout
@@ -39,7 +56,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:background="@color/bg_video_view"
         android:visibility="gone">
 
         <ImageView

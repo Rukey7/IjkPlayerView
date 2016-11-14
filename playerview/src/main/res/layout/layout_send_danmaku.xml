@@ -20,7 +20,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
-                android:src="@mipmap/ic_cancel_black_36dp"/>
+                android:layout_gravity="center_vertical"
+                android:src="@mipmap/ic_cancel_danmaku"/>
 
             <EditText
                 android:id="@+id/et_danmaku_content"
@@ -38,8 +39,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
+                android:layout_gravity="center_vertical"
                 android:layout_marginRight="@dimen/navigation_height"
-                android:src="@mipmap/ic_send_blue_grey_500_36dp"/>
+                android:src="@mipmap/ic_send_danmaku"/>
         </LinearLayout>
     </LinearLayout>
 

@@ -33,6 +33,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:padding="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
             android:src="@drawable/sel_play_btn"/>
 
         <TextView
