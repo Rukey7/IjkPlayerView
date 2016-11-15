@@ -6,7 +6,7 @@
     <LinearLayout
         android:id="@+id/fullscreen_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/control_bar_height"
         android:background="@color/bg_video_view"
         android:orientation="horizontal"
         android:visibility="gone">
@@ -15,9 +15,10 @@
             android:id="@+id/iv_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_marginLeft="5dp"
             android:padding="5dp"
-            android:src="@mipmap/ic_back"/>
+            android:src="@mipmap/ic_return_back"/>
 
         <com.dl7.playerview.widgets.MarqueeTextView
             android:id="@+id/tv_title"
@@ -27,6 +28,8 @@
             android:layout_weight="1"
             android:ellipsize="marquee"
             android:focusable="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="15dp"
             android:focusableInTouchMode="true"
             android:marqueeRepeatLimit="marquee_forever"
             android:singleLine="true"
@@ -38,7 +41,6 @@
             android:id="@+id/pb_battery"
             style="@style/ProgressBar_Battery"
             android:layout_gravity="center"
-            android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:max="100"/>
 
@@ -46,10 +48,21 @@
             android:id="@+id/tv_system_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
             android:textColor="@android:color/white"
-            android:layout_marginRight="5dp"
+            android:layout_marginRight="10dp"
             android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/tv_settings"
+            android:text="设置"
+            android:layout_gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:padding="5dp"
+            android:layout_marginRight="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 
     <FrameLayout
@@ -65,6 +78,6 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:padding="5dp"
-            android:src="@mipmap/ic_back"/>
+            android:src="@mipmap/ic_return_back"/>
     </FrameLayout>
 </merge>

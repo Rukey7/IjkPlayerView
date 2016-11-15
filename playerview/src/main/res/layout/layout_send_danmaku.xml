@@ -23,6 +23,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:padding="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
                 android:src="@mipmap/ic_cancel_danmaku"/>
 
             <EditText
@@ -42,6 +44,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:padding="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="3dp"
                 android:src="@mipmap/ic_send_danmaku"/>
         </LinearLayout>
 

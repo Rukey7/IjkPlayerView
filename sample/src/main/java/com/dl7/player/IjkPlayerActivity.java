@@ -37,7 +37,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
         mPlayerView.init()
                 .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
                 .enableDanmaku()
-                .setTitle("这是个跑马灯哦，跑马灯，跑马灯。。。")
+                .setTitle("这是个跑马灯TextView，标题要足够长才会跑，-(゜ -゜)つロ 乾杯~")
 //                .setDanmakuSource(getResources().openRawResource(R.raw.comments))
                 .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
 

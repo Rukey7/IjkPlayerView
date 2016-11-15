@@ -21,6 +21,8 @@
         <item name="android:layout_height">@dimen/danmaku_input_options_color_radio_btn_height</item>
         <item name="android:layout_marginLeft">@dimen/danmaku_input_options_color_radio_btn_margin</item>
         <item name="android:layout_marginRight">@dimen/danmaku_input_options_color_radio_btn_margin</item>
+        <item name="android:paddingLeft">@dimen/danmaku_input_options_color_radio_btn_margin</item>
+        <item name="android:paddingRight">@dimen/danmaku_input_options_color_radio_btn_margin</item>
         <item name="android:button">@drawable/sel_btn_danmaku_input_options_color</item>
     </style>
 

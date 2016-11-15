@@ -2,7 +2,10 @@ package com.dl7.playerview.utils;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.widget.LinearLayout;
 
 /**
  * Created by long on 2016/11/4.
@@ -29,6 +32,28 @@ public final class AnimHelper {
         set.setDuration(duration);
         set.playTogether(translationX, alpha);
         set.start();
+    }
+
+    /**
+     * 裁剪视图宽度
+     * @param view
+     * @param srcWidth
+     * @param endWidth
+     * @param duration
+     */
+    public static void doClipViewWidth(final View view, int srcWidth, int endWidth, int duration) {
+        ValueAnimator valueAnimator = ValueAnimator.ofInt(srcWidth, endWidth).setDuration(duration);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                int width = (int) valueAnimator.getAnimatedValue();
+                LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) view.getLayoutParams();
+                layoutParams.width = width;
+                view.setLayoutParams(layoutParams);
+            }
+        });
+        valueAnimator.setInterpolator(new AccelerateInterpolator());
+        valueAnimator.start();
     }
 
 }

@@ -88,7 +88,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     // 进度条最大值
     private static final int MAX_VIDEO_SEEK = 1000;
     // 默认隐藏控制栏时间
-    private static final int DEFAULT_HIDE_TIMEOUT = 3000;
+    private static final int DEFAULT_HIDE_TIMEOUT = 5000;
     // 更新进度消息
     private static final int MSG_UPDATE_SEEK = 10086;
     // 无效变量
@@ -738,10 +738,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mEtDanmakuContent.setText("");
         } else if (id == R.id.input_options_more) {
             Log.e("TTAG", ""+mDanmakuOptionsBasic.getX() + " - " + mDanmakuOptionsBasic.getY());
-            ViewCompat.animate(mDanmakuInputOptionsLayout)
-                    .translationX(-mDanmakuOptionsBasic.getX())
-                    .setDuration(1000)
-                    .start();
+            _toggleMoreColorOptions();
         }
     }
 
@@ -770,27 +767,31 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (isFullscreen) {
             _handleActionBar(true);
             _changeHeight(true);
+            mHandler.post(mHideBarRunnable);
             // 改变图标
             mIvFullscreen.setSelected(true);
-            mWindowTopBar.setVisibility(View.GONE);
+//            mWindowTopBar.setVisibility(View.GONE);
             mIvMediaQuality.setVisibility(VISIBLE);
-            if (mIsShowBar) {
-                mFullscreenTopBar.setVisibility(View.VISIBLE);
-                mIvPlayerLock.setVisibility(VISIBLE);
-            }
+            mLlBottomBar.setBackgroundResource(R.color.bg_video_view);
+//            if (mIsShowBar) {
+//                mFullscreenTopBar.setVisibility(View.VISIBLE);
+//                mIvPlayerLock.setVisibility(VISIBLE);
+//            }
         } else {
             _handleActionBar(false);
             _changeHeight(false);
+            mHandler.post(mHideBarRunnable);
             mIvFullscreen.setSelected(false);
-            if (mIsShowBar) {
-                mWindowTopBar.setVisibility(View.VISIBLE);
-            }
+//            if (mIsShowBar) {
+//                mWindowTopBar.setVisibility(View.VISIBLE);
+//            }
             mIvMediaQuality.setVisibility(GONE);
-            mFullscreenTopBar.setVisibility(View.GONE);
-            mIvPlayerLock.setVisibility(GONE);
+//            mFullscreenTopBar.setVisibility(View.GONE);
+//            mIvPlayerLock.setVisibility(GONE);
             if (mIsShowQuality) {
                 _toggleMediaQuality();
             }
+            mLlBottomBar.setBackgroundResource(android.R.color.transparent);
         }
     }
 
@@ -1577,7 +1578,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     };
 
     /**
-     * ============================  ============================
+     * ============================ 弹幕 ============================
      */
 
     private static final int NO_EDIT_DANMAKU = 201;
@@ -1613,13 +1614,19 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     // 发送弹幕
     private ImageView mIvDoSend;
 
-    private View mDanmakuInputOptionsLayout;
+    // 弹幕基础设置布局
     private View mDanmakuOptionsBasic;
+    // 弹幕字体大小选项卡
     private RadioGroup mDanmakuTextSizeOptions;
+    // 弹幕类型选项卡
     private RadioGroup mDanmakuTypeOptions;
-    private View mDanmakuMoreOptions;
+    // 弹幕当前颜色
     private RadioButton mDanmakuCurColor;
+    // 开关弹幕颜色选项卡
     private ImageView mDanmakuMoreColorIcon;
+    // 弹幕更多颜色设置布局
+    private View mDanmakuMoreOptions;
+    // 弹幕颜色选项卡
     private RadioGroup mDanmakuColorOptions;
 
     // 弹幕控制相关
@@ -1628,22 +1635,20 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private BaseDanmakuParser mParser;
     // 是否使能弹幕
     private boolean mIsEnableDanmaku = false;
+    // 弹幕颜色
     private int mDanmakuTextColor = Color.WHITE;
+    // 弹幕字体大小
     private float mDanmakuTextSize = INVALID_VALUE;
+    // 弹幕类型
     private int mDanmakuType = BaseDanmaku.TYPE_SCROLL_RL;
-    private int mSwitchTranslationX = INVALID_VALUE;
+    // 弹幕基础设置布局的宽度
+    private int mBasicOptionsWidth = INVALID_VALUE;
+    // 弹幕更多颜色设置布局宽度
+    private int mMoreOptionsWidth = INVALID_VALUE;
 
     /**
-     * 使能弹幕功能
-     *
-     * @return
+     * 弹幕初始化
      */
-    public PlayerView enableDanmaku() {
-        mIsEnableDanmaku = true;
-        _initDanmaku();
-        return this;
-    }
-
     private void _initDanmaku() {
         // 弹幕控制
         mDanmakuView = (IDanmakuView) findViewById(R.id.sv_danmaku);
@@ -1665,13 +1670,13 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         int navigationBarHeight = NavUtils.getNavigationBarHeight(mAttachActivity);
         if (navigationBarHeight != 0) {
             // 对于有虚拟键的设备需要将弹幕编辑布局右偏移防止被覆盖
-            FrameLayout.LayoutParams layoutParams = (LayoutParams) mEditDanmakuLayout.getLayoutParams();
-            layoutParams.setMargins(0, 0, navigationBarHeight, 0);
-            mEditDanmakuLayout.setLayoutParams(layoutParams);
+            mEditDanmakuLayout.setPadding(0, 0, navigationBarHeight, 0);
         }
 
         // 这些为弹幕配置处理
-        mDanmakuInputOptionsLayout = findViewById(R.id.input_options_layout);
+        int oneBtnWidth = getResources().getDimensionPixelOffset(R.dimen.danmaku_input_options_color_radio_btn_size);
+        // 布局宽度为每个选项卡宽度 * 12 个
+        mMoreOptionsWidth = oneBtnWidth * 12;
         mDanmakuOptionsBasic = findViewById(R.id.input_options_basic);
         mDanmakuMoreOptions = findViewById(R.id.input_options_more);
         mDanmakuMoreOptions.setOnClickListener(this);
@@ -1705,42 +1710,43 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mDanmakuColorOptions.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
+                // 取的是 tag 字符串值，需转换为颜色
                 String color = (String) findViewById(checkedId).getTag();
-                Log.w("TTAG", color);
-                Log.w("TTAG", ""+Color.parseColor(color));
+                mDanmakuTextColor = Color.parseColor(color);
+                mDanmakuCurColor.setBackgroundColor(mDanmakuTextColor);
             }
         });
 
+        // 设置弹幕
         mDanmakuContext = DanmakuContext.create();
         if (mDanmakuView != null) {
-            mParser = createParser(null);
-            mDanmakuView.enableDanmakuDrawingCache(true);
-            mDanmakuView.prepare(mParser, mDanmakuContext);
-        }
-    }
-
-    private BaseDanmakuParser createParser(InputStream stream) {
-        if (stream == null) {
-            return new BaseDanmakuParser() {
+            mParser = new BaseDanmakuParser() {
                 @Override
                 protected Danmakus parse() {
                     return new Danmakus();
                 }
             };
+            mDanmakuView.enableDanmakuDrawingCache(true);
+            mDanmakuView.prepare(mParser, mDanmakuContext);
         }
-
-        ILoader loader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
-        try {
-            loader.load(stream);
-        } catch (IllegalDataException e) {
-            e.printStackTrace();
-        }
-        BaseDanmakuParser parser = new BiliDanmukuParser();
-        IDataSource<?> dataSource = loader.getDataSource();
-        parser.load(dataSource);
-        return parser;
     }
 
+    /**
+     * 使能弹幕功能
+     *
+     * @return
+     */
+    public PlayerView enableDanmaku() {
+        mIsEnableDanmaku = true;
+        _initDanmaku();
+        return this;
+    }
+
+    /**
+     * 设置弹幕资源，资源格式需满足 bilibili 的弹幕文件格式
+     * @param stream 弹幕资源
+     * @return
+     */
     public PlayerView setDanmakuSource(InputStream stream) {
         if (stream == null) {
             return this;
@@ -1762,42 +1768,37 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
-     * 添加一条弹幕
-     *
-     * @param isLive 是否直播
+     * 显示/隐藏弹幕
+     * @param isShow 是否显示
+     * @return
      */
-    private void addDanmaku(boolean isLive) {
-        BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
-        if (danmaku == null || mDanmakuView == null) {
-            return;
+    public PlayerView showOrHideDanmaku(boolean isShow) {
+        if (isShow) {
+            mIvDanmakuControl.setSelected(false);
+            mDanmakuView.show();
+        } else {
+            mIvDanmakuControl.setSelected(true);
+            mDanmakuView.hide();
         }
-        // for(int i=0;i<100;i++){
-        // }
-        danmaku.text = "这是一条弹幕" + System.nanoTime();
-        danmaku.padding = 5;
-        danmaku.priority = 0;  // 可能会被各种过滤器过滤并隐藏显示
-        danmaku.isLive = isLive;
-        danmaku.setTime(mDanmakuView.getCurrentTime());
-        danmaku.textSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
-        danmaku.textColor = Color.RED;
-        danmaku.textShadowColor = Color.WHITE;
-        // danmaku.underlineColor = Color.GREEN;
-        danmaku.borderColor = Color.GREEN;
-        mDanmakuView.addDanmaku(danmaku);
+        return this;
     }
 
-
-    public void sendDanmaku(String text, boolean isLive) {
+    /**
+     * 发射弹幕
+     * @param text 内容
+     * @param isLive 是否直播
+     */
+    public BaseDanmaku sendDanmaku(String text, boolean isLive) {
         if (!mIsEnableDanmaku) {
             throw new RuntimeException("Danmaku is disable, use enableDanmaku() first");
         }
         if (TextUtils.isEmpty(text)) {
             Toast.makeText(mAttachActivity, "内容为空", Toast.LENGTH_SHORT).show();
-            return;
+            return null;
         }
         BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(mDanmakuType);
         if (danmaku == null || mDanmakuView == null) {
-            return;
+            return null;
         }
         if (mDanmakuTextSize == INVALID_VALUE) {
             mDanmakuTextSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
@@ -1811,20 +1812,60 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         danmaku.underlineColor = Color.GREEN;
         danmaku.setTime(mDanmakuView.getCurrentTime());
         mDanmakuView.addDanmaku(danmaku);
+        return danmaku;
     }
 
+    /**
+     * 在编辑弹幕前调用，会控制视频的播放状态，配合{@link #recoverFromEditDanmaku()}调用
+     */
+    public void editDanmaku() {
+        if (mVideoView.isPlaying()) {
+            pause();
+            mDanmakuStatus = EDIT_DANMAKU_WHEN_PLAY;
+        } else {
+            mDanmakuStatus = EDIT_DANMAKU_WHEN_PAUSE;
+        }
+    }
+
+    /**
+     * 从弹幕编辑状态返回，取消编辑或发射弹幕后配合{@link #editDanmaku()}调用
+     * @return  是否从编辑状态回退
+     */
+    public boolean recoverFromEditDanmaku() {
+        if (mDanmakuStatus == NO_EDIT_DANMAKU) {
+            return false;
+        }
+        if (mIsFullscreen) {
+            _recoverScreen();
+        }
+        if (mDanmakuStatus == EDIT_DANMAKU_WHEN_PLAY) {
+            start();
+        }
+        mDanmakuStatus = NO_EDIT_DANMAKU;
+        return true;
+    }
+
+    /**
+     * 激活弹幕
+     */
     private void _resumeDanmaku() {
         if (mDanmakuView != null && mDanmakuView.isPrepared() && mDanmakuView.isPaused()) {
             mDanmakuView.resume();
         }
     }
 
+    /**
+     * 暂停弹幕
+     */
     private void _pauseDanmaku() {
         if (mDanmakuView != null && mDanmakuView.isPrepared()) {
             mDanmakuView.pause();
         }
     }
 
+    /**
+     * 切换弹幕的显示/隐藏
+     */
     private void _toggleDanmakuShow() {
         if (mIvDanmakuControl.isSelected()) {
             showOrHideDanmaku(true);
@@ -1833,6 +1874,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
+    /**
+     * 切换弹幕相关控件View的显示/隐藏
+     * @param isShow 是否显示
+     */
     private void _toggleDanmakuView(boolean isShow) {
         if (mIsEnableDanmaku) {
             if (isShow) {
@@ -1852,45 +1897,35 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     }
 
-    public PlayerView showOrHideDanmaku(boolean isShow) {
-        if (isShow) {
-            mIvDanmakuControl.setSelected(false);
-            mDanmakuView.show();
-        } else {
-            mIvDanmakuControl.setSelected(true);
-            mDanmakuView.hide();
-        }
-        return this;
-    }
-
+    /**
+     * 从弹幕编辑状态复原界面
+     */
     private void _recoverScreen() {
+        // 清除焦点
         mEditDanmakuLayout.clearFocus();
         mEditDanmakuLayout.setVisibility(GONE);
+        // 关闭软键盘
         SoftInputUtils.closeSoftInput(mAttachActivity);
+        // 重新设置全屏界面UI标志位
         _setUiLayoutFullscreen();
     }
 
-    public void editDanmaku() {
-        if (mVideoView.isPlaying()) {
-            pause();
-            mDanmakuStatus = EDIT_DANMAKU_WHEN_PLAY;
+    /**
+     * 动画切换弹幕颜色选项卡显示
+     */
+    private void _toggleMoreColorOptions() {
+        if (mBasicOptionsWidth == INVALID_VALUE) {
+            mBasicOptionsWidth = mDanmakuOptionsBasic.getWidth();
+        }
+        if (mDanmakuColorOptions.getWidth() == 0) {
+            AnimHelper.doClipViewWidth(mDanmakuOptionsBasic, mBasicOptionsWidth, 0, 300);
+            AnimHelper.doClipViewWidth(mDanmakuColorOptions, 0, mMoreOptionsWidth, 300);
+            ViewCompat.animate(mDanmakuMoreColorIcon).rotation(180).setDuration(150).setStartDelay(250).start();
         } else {
-            mDanmakuStatus = EDIT_DANMAKU_WHEN_PAUSE;
+            AnimHelper.doClipViewWidth(mDanmakuOptionsBasic, 0, mBasicOptionsWidth, 300);
+            AnimHelper.doClipViewWidth(mDanmakuColorOptions, mMoreOptionsWidth, 0, 300);
+            ViewCompat.animate(mDanmakuMoreColorIcon).rotation(0).setDuration(150).setStartDelay(250).start();
         }
-    }
-
-    public boolean recoverFromEditDanmaku() {
-        if (mDanmakuStatus == NO_EDIT_DANMAKU) {
-            return false;
-        }
-        if (mIsFullscreen) {
-            _recoverScreen();
-        }
-        if (mDanmakuStatus == EDIT_DANMAKU_WHEN_PLAY) {
-            start();
-        }
-        mDanmakuStatus = NO_EDIT_DANMAKU;
-        return true;
     }
 
     /**
