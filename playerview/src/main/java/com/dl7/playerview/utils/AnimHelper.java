@@ -15,6 +15,13 @@ public final class AnimHelper {
     }
 
 
+    /**
+     * 执行从右滑入动画
+     * @param view
+     * @param startX
+     * @param endX
+     * @param duration
+     */
     public static void doSlideRightIn(View view, int startX, int endX, int duration) {
         ObjectAnimator translationX = ObjectAnimator.ofFloat(view, "translationX", startX, endX);
         ObjectAnimator alpha = ObjectAnimator.ofFloat(view, "alpha", 0, 1);
@@ -23,4 +30,5 @@ public final class AnimHelper {
         set.playTogether(translationX, alpha);
         set.start();
     }
+
 }

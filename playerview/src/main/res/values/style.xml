@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="EditTextStyle" parent="@android:style/Widget.Holo.EditText">
+        <item name="android:imeOptions">flagNoExtractUi|flagNoFullscreen</item>
+    </style>
+</resources>

@@ -35,7 +35,7 @@
             android:padding="5dp"
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
-            android:src="@drawable/sel_play_btn"/>
+            android:src="@drawable/sel_btn_play"/>
 
         <TextView
             android:id="@+id/tv_cur_time"
@@ -80,7 +80,7 @@
             android:textSize="16sp"/>
 
         <TextView
-            android:id="@+id/tv_send_danmaku"
+            android:id="@+id/tv_open_edit_danmaku"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -103,7 +103,7 @@
             android:layout_marginLeft="5dp"
             android:layout_marginRight="3dp"
             android:padding="5dp"
-            android:src="@drawable/sel_danmaku_btn"
+            android:src="@drawable/sel_btn_danmaku_control"
             android:visibility="gone"/>
 
         <TextView
@@ -129,6 +129,6 @@
             android:layout_gravity="center"
             android:layout_marginRight="5dp"
             android:padding="5dp"
-            android:src="@drawable/sel_fullscreen_btn"/>
+            android:src="@drawable/sel_btn_fullscreen"/>
     </LinearLayout>
 </merge>

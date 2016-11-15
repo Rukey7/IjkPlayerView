@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:background="@color/bg_video_view"
         android:orientation="horizontal"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <ImageView
             android:id="@+id/iv_back"
@@ -47,6 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
+            android:textColor="@android:color/white"
             android:layout_marginRight="5dp"
             android:textSize="16sp"/>
     </LinearLayout>

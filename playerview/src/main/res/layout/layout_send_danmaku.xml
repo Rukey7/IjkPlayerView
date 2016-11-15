@@ -5,10 +5,12 @@
 
     <LinearLayout
         android:id="@+id/ll_edit_danmaku"
-        android:orientation="vertical"
-        android:visibility="gone"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/bg_video_view"
+        android:clickable="true"
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -19,8 +21,8 @@
                 android:id="@+id/iv_cancel_send"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
                 android:layout_gravity="center_vertical"
+                android:padding="5dp"
                 android:src="@mipmap/ic_cancel_danmaku"/>
 
             <EditText
@@ -38,11 +40,13 @@
                 android:id="@+id/iv_do_send"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
                 android:layout_gravity="center_vertical"
-                android:layout_marginRight="@dimen/navigation_height"
+                android:padding="5dp"
                 android:src="@mipmap/ic_send_danmaku"/>
         </LinearLayout>
+
+        <include
+            layout="@layout/layout_danmaku_input_options"/>
     </LinearLayout>
 
 </merge>

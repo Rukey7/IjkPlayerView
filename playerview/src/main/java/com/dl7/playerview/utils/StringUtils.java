@@ -1,5 +1,8 @@
 package com.dl7.playerview.utils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by long on 2016/10/18.
  */
@@ -37,5 +40,14 @@ public final class StringUtils {
             showSize = Long.toString(fileSize / (1024 * 1024)) + "MB/s";
         }
         return showSize;
+    }
+
+    /**
+     * 获取格式化当前时间
+     * @return
+     */
+    public static String getCurFormatTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        return sdf.format(new Date(System.currentTimeMillis()));
     }
 }

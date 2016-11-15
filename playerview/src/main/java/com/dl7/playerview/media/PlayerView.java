@@ -21,6 +21,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPropertyAnimatorListenerAdapter;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
@@ -38,12 +39,17 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.dl7.playerview.R;
 import com.dl7.playerview.utils.AnimHelper;
+import com.dl7.playerview.utils.NavUtils;
 import com.dl7.playerview.utils.SoftInputUtils;
+import com.dl7.playerview.utils.StringUtils;
 import com.dl7.playerview.utils.WindowUtils;
 import com.dl7.playerview.widgets.MarqueeTextView;
 
@@ -55,13 +61,11 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 
-import master.flame.danmaku.controller.DrawHandler;
 import master.flame.danmaku.controller.IDanmakuView;
 import master.flame.danmaku.danmaku.loader.ILoader;
 import master.flame.danmaku.danmaku.loader.IllegalDataException;
 import master.flame.danmaku.danmaku.loader.android.DanmakuLoaderFactory;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
-import master.flame.danmaku.danmaku.model.DanmakuTimer;
 import master.flame.danmaku.danmaku.model.android.DanmakuContext;
 import master.flame.danmaku.danmaku.model.android.Danmakus;
 import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
@@ -224,7 +228,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
         _initMediaQuality();
         _initVideoSkip();
-        _initBatteryListener();
+        _initBatteryReceiver();
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
@@ -581,6 +585,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mLlBottomBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
             // 全屏切换显示的控制栏不一样
             if (mIsFullscreen) {
+                // 只在显示控制栏的时候才设置时间，因为控制栏通常不显示且单位为分钟，所以不做实时更新
+                mTvSystemTime.setText(StringUtils.getCurFormatTime());
                 mFullscreenTopBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
                 mWindowTopBar.setVisibility(View.GONE);
                 mIvPlayerLock.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
@@ -718,7 +724,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             _setProgress();
         } else if (id == R.id.iv_danmaku_control) {
             _toggleDanmakuShow();
-        } else if (id == R.id.tv_send_danmaku) {
+        } else if (id == R.id.tv_open_edit_danmaku) {
             editDanmaku();
             _hideAllView(false);
             mIsShowBar = false;
@@ -730,6 +736,12 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             recoverFromEditDanmaku();
             sendDanmaku(mEtDanmakuContent.getText().toString(), false);
             mEtDanmakuContent.setText("");
+        } else if (id == R.id.input_options_more) {
+            Log.e("TTAG", ""+mDanmakuOptionsBasic.getX() + " - " + mDanmakuOptionsBasic.getY());
+            ViewCompat.animate(mDanmakuInputOptionsLayout)
+                    .translationX(-mDanmakuOptionsBasic.getX())
+                    .setDuration(1000)
+                    .start();
         }
     }
 
@@ -1582,22 +1594,47 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     @DanmakuStatus
     int mDanmakuStatus = NO_EDIT_DANMAKU;
 
+    // 弹幕开源控件
     private IDanmakuView mDanmakuView;
+    // 弹幕显示/隐藏按钮
     private ImageView mIvDanmakuControl;
-    private TextView mTvSendDanmaku;
+    // 弹幕编辑布局打开按钮
+    private TextView mTvOpenEditDanmaku;
+    // 使能弹幕才会显示的播放进度条
     private SeekBar mDanmakuPlayerSeek;
+    // 使能弹幕才会显示时间分割线
     private TextView mTvTimeSeparator;
+    // 弹幕编辑布局
     private View mEditDanmakuLayout;
+    // 弹幕内容编辑框
     private EditText mEtDanmakuContent;
+    // 取消弹幕发送
     private ImageView mIvCancelSend;
+    // 发送弹幕
     private ImageView mIvDoSend;
 
+    private View mDanmakuInputOptionsLayout;
+    private View mDanmakuOptionsBasic;
+    private RadioGroup mDanmakuTextSizeOptions;
+    private RadioGroup mDanmakuTypeOptions;
+    private View mDanmakuMoreOptions;
+    private RadioButton mDanmakuCurColor;
+    private ImageView mDanmakuMoreColorIcon;
+    private RadioGroup mDanmakuColorOptions;
+
+    // 弹幕控制相关
     private DanmakuContext mDanmakuContext;
+    // 弹幕解析器
     private BaseDanmakuParser mParser;
+    // 是否使能弹幕
     private boolean mIsEnableDanmaku = false;
+    private int mDanmakuTextColor = Color.WHITE;
+    private float mDanmakuTextSize = INVALID_VALUE;
+    private int mDanmakuType = BaseDanmaku.TYPE_SCROLL_RL;
+    private int mSwitchTranslationX = INVALID_VALUE;
 
     /**
-     * 启动弹幕功能
+     * 使能弹幕功能
      *
      * @return
      */
@@ -1608,9 +1645,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     private void _initDanmaku() {
+        // 弹幕控制
         mDanmakuView = (IDanmakuView) findViewById(R.id.sv_danmaku);
         mIvDanmakuControl = (ImageView) findViewById(R.id.iv_danmaku_control);
-        mTvSendDanmaku = (TextView) findViewById(R.id.tv_send_danmaku);
+        mTvOpenEditDanmaku = (TextView) findViewById(R.id.tv_open_edit_danmaku);
         mTvTimeSeparator = (TextView) findViewById(R.id.tv_separator);
         mEditDanmakuLayout = findViewById(R.id.ll_edit_danmaku);
         mEtDanmakuContent = (EditText) findViewById(R.id.et_danmaku_content);
@@ -1620,50 +1658,62 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mDanmakuPlayerSeek.setMax(MAX_VIDEO_SEEK);
         mDanmakuPlayerSeek.setOnSeekBarChangeListener(mSeekListener);
         mIvDanmakuControl.setOnClickListener(this);
-        mTvSendDanmaku.setOnClickListener(this);
+        mTvOpenEditDanmaku.setOnClickListener(this);
         mIvCancelSend.setOnClickListener(this);
         mIvDoSend.setOnClickListener(this);
-        // 设置最大显示行数
-//        HashMap<Integer, Integer> maxLinesPair = new HashMap<Integer, Integer>();
-//        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_RL, 5); // 滚动弹幕最大显示5行
-//        // 设置是否禁止重叠
-//        HashMap<Integer, Boolean> overlappingEnablePair = new HashMap<Integer, Boolean>();
-//        overlappingEnablePair.put(BaseDanmaku.TYPE_SCROLL_RL, true);
-//        overlappingEnablePair.put(BaseDanmaku.TYPE_FIX_TOP, true);
-        // 配置参数
+
+        int navigationBarHeight = NavUtils.getNavigationBarHeight(mAttachActivity);
+        if (navigationBarHeight != 0) {
+            // 对于有虚拟键的设备需要将弹幕编辑布局右偏移防止被覆盖
+            FrameLayout.LayoutParams layoutParams = (LayoutParams) mEditDanmakuLayout.getLayoutParams();
+            layoutParams.setMargins(0, 0, navigationBarHeight, 0);
+            mEditDanmakuLayout.setLayoutParams(layoutParams);
+        }
+
+        // 这些为弹幕配置处理
+        mDanmakuInputOptionsLayout = findViewById(R.id.input_options_layout);
+        mDanmakuOptionsBasic = findViewById(R.id.input_options_basic);
+        mDanmakuMoreOptions = findViewById(R.id.input_options_more);
+        mDanmakuMoreOptions.setOnClickListener(this);
+        mDanmakuCurColor = (RadioButton) findViewById(R.id.input_options_color_current);
+        mDanmakuMoreColorIcon = (ImageView) findViewById(R.id.input_options_color_more_icon);
+        mDanmakuTextSizeOptions = (RadioGroup) findViewById(R.id.input_options_group_textsize);
+        mDanmakuTypeOptions = (RadioGroup) findViewById(R.id.input_options_group_type);
+        mDanmakuColorOptions = (RadioGroup) findViewById(R.id.input_options_color_group);
+        mDanmakuTextSizeOptions.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.input_options_small_textsize) {
+                    mDanmakuTextSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f) * 0.7f;
+                } else if (checkedId == R.id.input_options_medium_textsize) {
+                    mDanmakuTextSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
+                }
+            }
+        });
+        mDanmakuTypeOptions.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.input_options_rl_type) {
+                    mDanmakuType = BaseDanmaku.TYPE_SCROLL_RL;
+                } else if (checkedId == R.id.input_options_top_type) {
+                    mDanmakuType = BaseDanmaku.TYPE_FIX_TOP;
+                } else if (checkedId == R.id.input_options_bottom_type) {
+                    mDanmakuType = BaseDanmaku.TYPE_FIX_BOTTOM;
+                }
+            }
+        });
+        mDanmakuColorOptions.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                String color = (String) findViewById(checkedId).getTag();
+                Log.w("TTAG", color);
+                Log.w("TTAG", ""+Color.parseColor(color));
+            }
+        });
+
         mDanmakuContext = DanmakuContext.create();
-//        mDanmakuContext.setDanmakuStyle(IDisplayer.DANMAKU_STYLE_STROKEN, 3)
-//                .setDuplicateMergingEnabled(false)
-//                .setScrollSpeedFactor(1.2f)
-//                .setScaleTextSize(1.2f)
-//                .setMaximumVisibleSizeInScreen(50)
-//                .setMaximumLines(maxLinesPair)
-//                .preventOverlapping(overlappingEnablePair);
-        //
         if (mDanmakuView != null) {
             mParser = createParser(null);
-            mDanmakuView.setCallback(new DrawHandler.Callback() {
-                @Override
-                public void updateTimer(DanmakuTimer timer) {
-                }
-
-                @Override
-                public void drawingFinished() {
-                }
-
-                @Override
-                public void danmakuShown(BaseDanmaku danmaku) {
-//                    Log.d("DFM", "danmakuShown(): text=" + danmaku.text);
-                }
-
-                @Override
-                public void prepared() {
-//                    if (mVideoView != null && mVideoView.isPlaying()) {
-//                        mDanmakuView.start();
-//                    }
-                    Log.e("TTAG", "start");
-                }
-            });
             mDanmakuView.enableDanmakuDrawingCache(true);
             mDanmakuView.prepare(mParser, mDanmakuContext);
         }
@@ -1741,17 +1791,23 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (!mIsEnableDanmaku) {
             throw new RuntimeException("Danmaku is disable, use enableDanmaku() first");
         }
-        BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
+        if (TextUtils.isEmpty(text)) {
+            Toast.makeText(mAttachActivity, "内容为空", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(mDanmakuType);
         if (danmaku == null || mDanmakuView == null) {
             return;
+        }
+        if (mDanmakuTextSize == INVALID_VALUE) {
+            mDanmakuTextSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
         }
         danmaku.text = text;
         danmaku.padding = 5;
         danmaku.isLive = isLive;
         danmaku.priority = 0;  // 可能会被各种过滤器过滤并隐藏显示
-        Log.e("TTAG", "" + danmaku.textSize);
-        danmaku.textSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
-        danmaku.textColor = Color.WHITE;
+        danmaku.textSize = mDanmakuTextSize;
+        danmaku.textColor = mDanmakuTextColor;
         danmaku.underlineColor = Color.GREEN;
         danmaku.setTime(mDanmakuView.getCurrentTime());
         mDanmakuView.addDanmaku(danmaku);
@@ -1781,13 +1837,13 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (mIsEnableDanmaku) {
             if (isShow) {
                 mIvDanmakuControl.setVisibility(VISIBLE);
-                mTvSendDanmaku.setVisibility(VISIBLE);
+                mTvOpenEditDanmaku.setVisibility(VISIBLE);
                 mTvTimeSeparator.setVisibility(VISIBLE);
                 mDanmakuPlayerSeek.setVisibility(VISIBLE);
                 mPlayerSeek.setVisibility(GONE);
             } else {
                 mIvDanmakuControl.setVisibility(GONE);
-                mTvSendDanmaku.setVisibility(GONE);
+                mTvOpenEditDanmaku.setVisibility(GONE);
                 mTvTimeSeparator.setVisibility(GONE);
                 mDanmakuPlayerSeek.setVisibility(GONE);
                 mPlayerSeek.setVisibility(VISIBLE);
@@ -1841,16 +1897,20 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * ============================ 电量、时间 ============================
      */
 
+    // 电量显示
     private ProgressBar mPbBatteryLevel;
+    // 系统时间显示
     private TextView mTvSystemTime;
+    // 电量变化广播接收器
     private BatteryBroadcastReceiver mBatteryReceiver;
 
     /**
      * 初始化电量监听
      */
-    private void _initBatteryListener() {
+    private void _initBatteryReceiver() {
         mPbBatteryLevel = (ProgressBar) findViewById(R.id.pb_battery);
         mTvSystemTime = (TextView) findViewById(R.id.tv_system_time);
+        mTvSystemTime.setText(StringUtils.getCurFormatTime());
         mBatteryReceiver = new BatteryBroadcastReceiver();
         //注册一个接受广播类型
         mAttachActivity.registerReceiver(mBatteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -1861,23 +1921,31 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     class BatteryBroadcastReceiver extends BroadcastReceiver {
 
-        private static final int BATTERY_LOW_LEVEL = 95;
+        // 低电量临界值
+        private static final int BATTERY_LOW_LEVEL = 15;
 
         @Override
         public void onReceive(Context context, Intent intent) {
-
+            // 接收电量变化信息
             if (intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)) {
                 int level = intent.getIntExtra("level", 0);
                 int scale = intent.getIntExtra("scale", 100);
+                // 电量百分比
                 int curPower = level * 100 / scale;
-                mPbBatteryLevel.setProgress(curPower);
                 int status = intent.getIntExtra("status", BatteryManager.BATTERY_HEALTH_UNKNOWN);
+                // SecondaryProgress 用来展示低电量，Progress 用来展示正常电量
                 if (status == BatteryManager.BATTERY_STATUS_CHARGING) {
-                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_player_battery_charging);
+                    mPbBatteryLevel.setSecondaryProgress(0);
+                    mPbBatteryLevel.setProgress(curPower);
+                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_battery_charging);
                 } else if (curPower < BATTERY_LOW_LEVEL) {
-                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_player_battery_red);
+                    mPbBatteryLevel.setProgress(0);
+                    mPbBatteryLevel.setSecondaryProgress(curPower);
+                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_battery_red);
                 } else {
-                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_player_battery);
+                    mPbBatteryLevel.setSecondaryProgress(0);
+                    mPbBatteryLevel.setProgress(curPower);
+                    mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_battery);
                 }
             }
         }
