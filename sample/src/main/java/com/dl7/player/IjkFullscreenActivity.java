@@ -15,7 +15,6 @@ public class IjkFullscreenActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_ijk_fullscreen);
         mPlayerView = new PlayerView(this);
         setContentView(mPlayerView);
         mPlayerView.init()
@@ -24,7 +23,8 @@ public class IjkFullscreenActivity extends AppCompatActivity {
                 .enableDanmaku()
                 .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
                 .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
-                .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
+                .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER)
+                .start();
     }
     @Override
     protected void onResume() {

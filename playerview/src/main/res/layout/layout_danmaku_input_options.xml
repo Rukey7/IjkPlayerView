@@ -60,7 +60,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="5.0dip"
-        android:background="@drawable/sel_danmaku_more_color_bg"
+        android:background="@drawable/sel_item_background"
         android:orientation="horizontal">
 
         <RadioButton

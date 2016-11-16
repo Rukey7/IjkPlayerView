@@ -16,6 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:background="@drawable/sel_item_background"
             android:padding="10dp"
             android:src="@mipmap/ic_return_back"/>
 
@@ -24,11 +25,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="15dp"
             android:layout_weight="1"
             android:ellipsize="marquee"
             android:focusable="true"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="15dp"
             android:focusableInTouchMode="true"
             android:marqueeRepeatLimit="marquee_forever"
             android:singleLine="true"
@@ -48,20 +49,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:textColor="@android:color/white"
             android:layout_marginRight="10dp"
+            android:textColor="@android:color/white"
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/tv_settings"
-            android:text="设置"
-            android:layout_gravity="center"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:padding="5dp"
-            android:layout_marginRight="10dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/sel_item_background"
+            android:padding="5dp"
+            android:text="设置"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"/>
     </LinearLayout>
 
     <FrameLayout
@@ -75,8 +77,8 @@
             android:id="@+id/iv_back_window"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:padding="5dp"
+            android:padding="10dp"
+            android:background="@drawable/sel_item_background"
             android:src="@mipmap/ic_return_back"/>
     </FrameLayout>
 </merge>

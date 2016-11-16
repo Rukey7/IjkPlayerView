@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.ijk_video_player).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, IjkFullscreenActivity.class));
+                startActivity(new Intent(MainActivity.this, IjkPlayerActivity.class));
             }
         });
     }

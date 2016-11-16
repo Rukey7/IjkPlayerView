@@ -297,7 +297,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mInitHeight = getHeight();
             mWidthPixels = getResources().getDisplayMetrics().widthPixels;
         }
-        Log.i("TTAG", mInitHeight + " - " + mWidthPixels);
     }
 
     /**============================ 外部调用接口 ============================*/
@@ -309,7 +308,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         Log.i("TTAG", "onResume");
         if (mIsScreenLocked) {
             // 如果出现锁屏则需要重新渲染器Render，不然会出现只有声音没有动画
-            // 目前我只在锁屏时会出现图像不动的情况，如果有遇到类似情况可以尝试按这个方法解决
+            // 目前只在锁屏时会出现图像不动的情况，如果有遇到类似情况可以尝试按这个方法解决
             mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
             mIsScreenLocked = false;
         }
@@ -463,8 +462,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     public PlayerView alwaysFullScreen() {
         mIsAlwaysFullScreen = true;
         _setFullScreen(true);
-//        mIvFullscreen.setVisibility(GONE);
-//        mIsFullscreen = true;
+        mIvFullscreen.setVisibility(GONE);
         mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         _setUiLayoutFullscreen();
         return this;
@@ -815,24 +813,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIsFullscreen = isFullscreen;
         // 处理弹幕相关视图
         _toggleDanmakuView(isFullscreen);
-        if (isFullscreen) {
-            _handleActionBar(true);
-            _changeHeight(true);
-            mHandler.post(mHideBarRunnable);
-            // 改变图标
-            mIvFullscreen.setSelected(true);
-            mIvMediaQuality.setVisibility(VISIBLE);
-            mLlBottomBar.setBackgroundResource(R.color.bg_video_view);
-        } else {
-            _handleActionBar(false);
-            _changeHeight(false);
-            mHandler.post(mHideBarRunnable);
-            mIvFullscreen.setSelected(false);
-            mIvMediaQuality.setVisibility(GONE);
-            if (mIsShowQuality) {
-                _toggleMediaQuality();
-            }
-            mLlBottomBar.setBackgroundResource(android.R.color.transparent);
+        _handleActionBar(isFullscreen);
+        _changeHeight(isFullscreen);
+        mIvFullscreen.setSelected(isFullscreen);
+        mHandler.post(mHideBarRunnable);
+        mIvMediaQuality.setVisibility(isFullscreen ? VISIBLE : GONE);
+        mLlBottomBar.setBackgroundResource(isFullscreen ? R.color.bg_video_view : android.R.color.transparent);
+        if (mIsShowQuality && !isFullscreen) {
+            _toggleMediaQuality();
         }
     }
 
@@ -1106,7 +1094,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         // 视频总的时长
         int duration = mVideoView.getDuration();
         if (duration > 0) {
-            // use long to avoid overflow，转换为 Seek 显示的进度值
+            // 转换为 Seek 显示的进度值
             long pos = (long) MAX_VIDEO_SEEK * position / duration;
             mPlayerSeek.setProgress((int) pos);
             if (mIsEnableDanmaku) {
@@ -1603,7 +1591,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     /**
      * 设置跳转提示
      *
-     * @param targetPosition 目标进度
+     * @param targetPosition 目标进度,单位:ms
      */
     public PlayerView setSkipTip(int targetPosition) {
         mSkipPosition = targetPosition;
@@ -1814,6 +1802,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     public PlayerView enableDanmaku() {
         mIsEnableDanmaku = true;
         _initDanmaku();
+        if (mIsAlwaysFullScreen) {
+            _toggleDanmakuView(true);
+        }
         return this;
     }
 
@@ -1988,6 +1979,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         SoftInputUtils.closeSoftInput(mAttachActivity);
         // 重新设置全屏界面UI标志位
         _setUiLayoutFullscreen();
+        if (mDanmakuColorOptions.getWidth() != 0) {
+            _toggleMoreColorOptions();
+        }
     }
 
     /**

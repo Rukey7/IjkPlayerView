@@ -4,8 +4,8 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
-import android.widget.LinearLayout;
 
 /**
  * Created by long on 2016/11/4.
@@ -47,7 +47,7 @@ public final class AnimHelper {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
                 int width = (int) valueAnimator.getAnimatedValue();
-                LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) view.getLayoutParams();
+                ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
                 layoutParams.width = width;
                 view.setLayoutParams(layoutParams);
             }
