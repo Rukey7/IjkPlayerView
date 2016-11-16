@@ -91,6 +91,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private static final int DEFAULT_HIDE_TIMEOUT = 5000;
     // 更新进度消息
     private static final int MSG_UPDATE_SEEK = 10086;
+    // 使能翻转消息
+    private static final int MSG_ENABLE_ORIENTATION = 10087;
     // 无效变量
     private static final int INVALID_VALUE = -1;
 
@@ -147,6 +149,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                     // 这里会重复发送MSG，已达到实时更新 Seek 的效果
                     msg = obtainMessage(MSG_UPDATE_SEEK);
                     sendMessageDelayed(msg, 1000 - (pos % 1000));
+                }
+            } else if (msg.what == MSG_ENABLE_ORIENTATION) {
+                if (mOrientationListener != null) {
+                    mOrientationListener.enable();
                 }
             }
         }
@@ -228,7 +234,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
         _initMediaQuality();
         _initVideoSkip();
-        _initBatteryReceiver();
+        _initReceiver();
 
         mIvPlay.setOnClickListener(this);
         mIvBack.setOnClickListener(this);
@@ -275,6 +281,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             }
         };
         if (mIsForbidOrientation) {
+            // 禁止翻转
             mOrientationListener.disable();
         }
     }
@@ -294,6 +301,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * Activity.onResume() 里调用
      */
     public void onResume() {
+        Log.i("TTAG", "onResume");
+        if (mIsScreenLocked) {
+            // 如果出现锁屏则需要重新渲染器Render，不然会出现只有声音没有动画
+            mVideoView.release(false);
+            mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
+            setVideoPath(mVideoView.getUri());
+            mIsScreenLocked = false;
+        }
         mVideoView.resume();
         if (!mIsForbidTouch && !mIsForbidOrientation) {
             mOrientationListener.enable();
@@ -309,6 +324,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * Activity.onPause() 里调用
      */
     public void onPause() {
+        Log.i("TTAG", "onPause");
         mCurPosition = mVideoView.getCurrentPosition();
         mVideoView.pause();
         mIvPlay.setSelected(false);
@@ -322,6 +338,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @return 返回播放进度
      */
     public int onDestroy() {
+        Log.i("TTAG", "onDestroy");
         // 记录播放进度
         int curPosition = mVideoView.getCurrentPosition();
         mVideoView.destroy();
@@ -333,6 +350,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         }
         // 注销广播
         mAttachActivity.unregisterReceiver(mBatteryReceiver);
+        mAttachActivity.unregisterReceiver(mScreenReceiver);
+        // 关闭屏幕常亮
+        mAttachActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         return curPosition;
     }
 
@@ -448,6 +468,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mLoadingView.setVisibility(VISIBLE);
             mIsShowBar = false;
         }
+        // 视频播放时开启屏幕常亮
+        mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     /**
@@ -459,6 +481,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mVideoView.pause();
         }
         _pauseDanmaku();
+        // 视频暂停时关闭屏幕常亮
+        mAttachActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     /**
@@ -482,15 +506,6 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     public void reset() {
-    }
-
-    /**
-     * 使能视频翻转
-     */
-    public PlayerView enableOrientation() {
-        mIsForbidOrientation = false;
-        mOrientationListener.enable();
-        return this;
     }
 
     /**============================ 控制栏处理 ============================*/
@@ -737,12 +752,21 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             sendDanmaku(mEtDanmakuContent.getText().toString(), false);
             mEtDanmakuContent.setText("");
         } else if (id == R.id.input_options_more) {
-            Log.e("TTAG", ""+mDanmakuOptionsBasic.getX() + " - " + mDanmakuOptionsBasic.getY());
+            Log.e("TTAG", "" + mDanmakuOptionsBasic.getX() + " - " + mDanmakuOptionsBasic.getY());
             _toggleMoreColorOptions();
         }
     }
 
     /**==================== 屏幕翻转/切换处理 ====================*/
+
+    /**
+     * 使能视频翻转
+     */
+    public PlayerView enableOrientation() {
+        mIsForbidOrientation = false;
+        mOrientationListener.enable();
+        return this;
+    }
 
     /**
      * 全屏切换，点击全屏按钮
@@ -806,17 +830,29 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             return;
         }
         if (mIsFullscreen) {
-            // 在全屏状态下，角度偏离竖直方向左右30°内进行竖屏切换
+            // 根据角度进行竖屏切换
             if (orientation >= 0 && orientation <= 30 || orientation >= 330) {
                 // 请求屏幕翻转
                 mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             }
         } else {
+            // 根据角度进行横屏切换
             if (orientation >= 60 && orientation <= 120) {
                 mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
             } else if (orientation >= 240 && orientation <= 300) {
                 mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
+        }
+    }
+
+    /**
+     * 当屏幕执行翻转操作后调用禁止翻转功能，延迟3000ms再使能翻转，避免不必要的翻转
+     */
+    private void _refreshOrientationEnable() {
+        if (!mIsForbidOrientation) {
+            mOrientationListener.disable();
+            mHandler.removeMessages(MSG_ENABLE_ORIENTATION);
+            mHandler.sendEmptyMessageDelayed(MSG_ENABLE_ORIENTATION, 3000);
         }
     }
 
@@ -884,6 +920,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param newConfig
      */
     public void configurationChanged(Configuration newConfig) {
+        _refreshOrientationEnable();
         // 沉浸式只能在SDK19以上实现
         if (Build.VERSION.SDK_INT >= 19) {
             if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -1265,10 +1302,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         switch (status) {
             case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
                 _pauseDanmaku();
-            case MediaPlayerParams.STATE_PREPARING:
                 if (!mIsNeverPlay) {
                     mLoadingView.setVisibility(View.VISIBLE);
                 }
+            case MediaPlayerParams.STATE_PREPARING:
                 break;
 
             case IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:
@@ -1471,7 +1508,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * 选择视频源
      *
      * @param quality 分辨率
-     *                {MEDIA_QUALITY_SMOOTH，MEDIA_QUALITY_MEDIUM，MEDIA_QUALITY_HIGH，MEDIA_QUALITY_SUPER，MEDIA_QUALITY_BD}
+     *                {@link #MEDIA_QUALITY_SMOOTH,#MEDIA_QUALITY_MEDIUM,#MEDIA_QUALITY_HIGH,#MEDIA_QUALITY_SUPER,#MEDIA_QUALITY_BD}
      * @return
      */
     public PlayerView setMediaQuality(@MediaQuality int quality) {
@@ -1744,6 +1781,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 设置弹幕资源，资源格式需满足 bilibili 的弹幕文件格式
+     *
      * @param stream 弹幕资源
      * @return
      */
@@ -1769,6 +1807,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 显示/隐藏弹幕
+     *
      * @param isShow 是否显示
      * @return
      */
@@ -1785,7 +1824,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 发射弹幕
-     * @param text 内容
+     *
+     * @param text   内容
      * @param isLive 是否直播
      */
     public BaseDanmaku sendDanmaku(String text, boolean isLive) {
@@ -1829,7 +1869,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 从弹幕编辑状态返回，取消编辑或发射弹幕后配合{@link #editDanmaku()}调用
-     * @return  是否从编辑状态回退
+     *
+     * @return 是否从编辑状态回退
      */
     public boolean recoverFromEditDanmaku() {
         if (mDanmakuStatus == NO_EDIT_DANMAKU) {
@@ -1876,6 +1917,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 切换弹幕相关控件View的显示/隐藏
+     *
      * @param isShow 是否显示
      */
     private void _toggleDanmakuView(boolean isShow) {
@@ -1929,7 +1971,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
-     * ============================ 电量、时间 ============================
+     * ============================ 电量、时间、锁屏 ============================
      */
 
     // 电量显示
@@ -1938,17 +1980,24 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private TextView mTvSystemTime;
     // 电量变化广播接收器
     private BatteryBroadcastReceiver mBatteryReceiver;
+    // 锁屏状态广播接收器
+    private ScreenBroadcastReceiver mScreenReceiver;
+    // 判断是否出现锁屏,有则需要重新设置渲染器，不然视频会没有动画只有声音
+    private boolean mIsScreenLocked = false;
+
 
     /**
      * 初始化电量监听
      */
-    private void _initBatteryReceiver() {
+    private void _initReceiver() {
         mPbBatteryLevel = (ProgressBar) findViewById(R.id.pb_battery);
         mTvSystemTime = (TextView) findViewById(R.id.tv_system_time);
         mTvSystemTime.setText(StringUtils.getCurFormatTime());
         mBatteryReceiver = new BatteryBroadcastReceiver();
+        mScreenReceiver = new ScreenBroadcastReceiver();
         //注册一个接受广播类型
         mAttachActivity.registerReceiver(mBatteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        mAttachActivity.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
     }
 
     /**
@@ -1982,6 +2031,19 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                     mPbBatteryLevel.setProgress(curPower);
                     mPbBatteryLevel.setBackgroundResource(R.mipmap.ic_battery);
                 }
+            }
+        }
+    }
+
+    /**
+     * 锁屏状态广播接收者
+     */
+    private class ScreenBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                mIsScreenLocked = true;
             }
         }
     }

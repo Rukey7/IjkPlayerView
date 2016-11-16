@@ -259,6 +259,10 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         invalidate();
     }
 
+    public Uri getUri() {
+        return mUri;
+    }
+
     // REMOVED: addSubtitleSource
     // REMOVED: mPendingSubtitleTracks
 
