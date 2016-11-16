@@ -193,6 +193,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private OnInfoListener mOutsideInfoListener;
     // 禁止翻转，默认为禁止
     private boolean mIsForbidOrientation = true;
+    // 是否只显示全屏状态
+    private boolean mIsAlwaysFullScreen = false;
+    // 记录按退出全屏时间
+    private long mExitTime = 0;
 
 
     public PlayerView(Context context) {
@@ -293,6 +297,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mInitHeight = getHeight();
             mWidthPixels = getResources().getDisplayMetrics().widthPixels;
         }
+        Log.i("TTAG", mInitHeight + " - " + mWidthPixels);
     }
 
     /**============================ 外部调用接口 ============================*/
@@ -304,9 +309,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         Log.i("TTAG", "onResume");
         if (mIsScreenLocked) {
             // 如果出现锁屏则需要重新渲染器Render，不然会出现只有声音没有动画
-            mVideoView.release(false);
+            // 目前我只在锁屏时会出现图像不动的情况，如果有遇到类似情况可以尝试按这个方法解决
             mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
-            setVideoPath(mVideoView.getUri());
             mIsScreenLocked = false;
         }
         mVideoView.resume();
@@ -383,7 +387,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (recoverFromEditDanmaku()) {
             return true;
         }
-        if (mIsFullscreen) {
+        if (mIsAlwaysFullScreen) {
+            _exit();
+            return true;
+        } else if (mIsFullscreen) {
             mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             if (mIsForbidTouch) {
                 // 锁住状态则解锁
@@ -447,6 +454,19 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
     public PlayerView setTitle(String title) {
         mTvTitle.setText(title);
+        return this;
+    }
+
+    /**
+     * 设置只显示全屏状态
+     */
+    public PlayerView alwaysFullScreen() {
+        mIsAlwaysFullScreen = true;
+        _setFullScreen(true);
+//        mIvFullscreen.setVisibility(GONE);
+//        mIsFullscreen = true;
+        mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        _setUiLayoutFullscreen();
         return this;
     }
 
@@ -616,6 +636,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                     mDanmakuPlayerSeek.setVisibility(GONE);
                 }
             }
+            if (mIsAlwaysFullScreen) {
+
+            }
         }
     }
 
@@ -713,6 +736,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         _refreshHideRunnable();
         int id = v.getId();
         if (id == R.id.iv_back) {
+            if (mIsAlwaysFullScreen) {
+                _exit();
+                return;
+            }
             mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         } else if (id == R.id.iv_back_window) {
             mAttachActivity.finish();
@@ -794,24 +821,14 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mHandler.post(mHideBarRunnable);
             // 改变图标
             mIvFullscreen.setSelected(true);
-//            mWindowTopBar.setVisibility(View.GONE);
             mIvMediaQuality.setVisibility(VISIBLE);
             mLlBottomBar.setBackgroundResource(R.color.bg_video_view);
-//            if (mIsShowBar) {
-//                mFullscreenTopBar.setVisibility(View.VISIBLE);
-//                mIvPlayerLock.setVisibility(VISIBLE);
-//            }
         } else {
             _handleActionBar(false);
             _changeHeight(false);
             mHandler.post(mHideBarRunnable);
             mIvFullscreen.setSelected(false);
-//            if (mIsShowBar) {
-//                mWindowTopBar.setVisibility(View.VISIBLE);
-//            }
             mIvMediaQuality.setVisibility(GONE);
-//            mFullscreenTopBar.setVisibility(View.GONE);
-//            mIvPlayerLock.setVisibility(GONE);
             if (mIsShowQuality) {
                 _toggleMediaQuality();
             }
@@ -829,7 +846,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         if (mIsNeverPlay) {
             return;
         }
-        if (mIsFullscreen) {
+        if (mIsFullscreen && !mIsAlwaysFullScreen) {
             // 根据角度进行竖屏切换
             if (orientation >= 0 && orientation <= 30 || orientation >= 330) {
                 // 请求屏幕翻转
@@ -878,6 +895,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param isFullscreen
      */
     private void _changeHeight(boolean isFullscreen) {
+        if (mIsAlwaysFullScreen) {
+            return;
+        }
         ViewGroup.LayoutParams layoutParams = getLayoutParams();
         if (isFullscreen) {
             // 高度扩展为横向全屏
@@ -904,6 +924,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                     View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                     View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             );
+            mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
     }
 
@@ -945,6 +966,18 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 _setFullScreen(false);
                 mAttachActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             }
+        }
+    }
+
+    /**
+     * 从总显示全屏状态退出处理{@link #alwaysFullScreen()}
+     */
+    private void _exit() {
+        if (System.currentTimeMillis() - mExitTime > 2000) {
+            Toast.makeText(mAttachActivity, "再按一次退出", Toast.LENGTH_SHORT).show();
+            mExitTime = System.currentTimeMillis();
+        } else {
+            mAttachActivity.finish();
         }
     }
 
@@ -1004,6 +1037,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
+            // 弹幕编辑状态返回则不执行单击操作
             if (isRecoverFromDanmaku) {
                 return true;
             }
@@ -1017,7 +1051,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
         @Override
         public boolean onDoubleTap(MotionEvent e) {
-            if (isRecoverFromDanmaku) {
+            // 如果未进行播放或从弹幕编辑状态返回则不执行双击操作
+            if (mIsNeverPlay || isRecoverFromDanmaku) {
                 return true;
             }
             if (!mIsForbidTouch) {
@@ -1618,6 +1653,9 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * ============================ 弹幕 ============================
      */
 
+    /**
+     * 弹幕编辑状态：正常未编辑状态、在播放时编辑、暂停时编辑
+     */
     private static final int NO_EDIT_DANMAKU = 201;
     private static final int EDIT_DANMAKU_WHEN_PLAY = 202;
     private static final int EDIT_DANMAKU_WHEN_PAUSE = 203;
@@ -1712,7 +1750,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
         // 这些为弹幕配置处理
         int oneBtnWidth = getResources().getDimensionPixelOffset(R.dimen.danmaku_input_options_color_radio_btn_size);
-        // 布局宽度为每个选项卡宽度 * 12 个
+        // 布局宽度为每个选项卡宽度 * 12 个，有12种可选颜色
         mMoreOptionsWidth = oneBtnWidth * 12;
         mDanmakuOptionsBasic = findViewById(R.id.input_options_basic);
         mDanmakuMoreOptions = findViewById(R.id.input_options_more);
@@ -1987,7 +2025,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
 
 
     /**
-     * 初始化电量监听
+     * 初始化电量、锁屏、时间处理
      */
     private void _initReceiver() {
         mPbBatteryLevel = (ProgressBar) findViewById(R.id.pb_battery);

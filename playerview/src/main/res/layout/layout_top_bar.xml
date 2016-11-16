@@ -16,8 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginLeft="5dp"
-            android:padding="5dp"
+            android:padding="10dp"
             android:src="@mipmap/ic_return_back"/>
 
         <com.dl7.playerview.widgets.MarqueeTextView
@@ -35,7 +34,7 @@
             android:singleLine="true"
             android:text="标题"
             android:textColor="@android:color/white"
-            android:textSize="18sp"/>
+            android:textSize="16sp"/>
 
         <ProgressBar
             android:id="@+id/pb_battery"
@@ -58,7 +57,7 @@
             android:text="设置"
             android:layout_gravity="center"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:padding="5dp"
             android:layout_marginRight="10dp"
             android:layout_width="wrap_content"

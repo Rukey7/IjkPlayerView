@@ -35,10 +35,9 @@ public class IjkPlayerActivity extends AppCompatActivity {
 //        Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
 //        mPlayerView.init().setVideoPath(VIDEO_URL).start();
         mPlayerView.init()
-                .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
-                .enableOrientation()
                 .enableDanmaku()
-                .setTitle("这是个跑马灯TextView，标题要足够长才会跑，-(゜ -゜)つロ 乾杯~")
+                .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
+                .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
 //                .setDanmakuSource(getResources().openRawResource(R.raw.comments))
                 .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER);
 
