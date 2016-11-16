@@ -18,13 +18,11 @@ package com.dl7.playerview.media;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -538,31 +536,31 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                      * if we're attached to a window. When we're going away and no
                      * longer have a window, don't bother showing the user an error.
                      */
-                    if (getWindowToken() != null) {
-                        String messageId;
-
-                        if (framework_err == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK) {
-                            messageId = "Invalid progressive playback";
-                        } else {
-                            messageId = "Unknown";
-                        }
-
-                        new AlertDialog.Builder(getContext())
-                                .setMessage(messageId)
-                                .setPositiveButton("OK",
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int whichButton) {
-                                            /* If we get here, there is no onError listener, so
-                                             * at least inform them that the video is over.
-                                             */
-                                                if (mOnCompletionListener != null) {
-                                                    mOnCompletionListener.onCompletion(mMediaPlayer);
-                                                }
-                                            }
-                                        })
-                                .setCancelable(false)
-                                .show();
-                    }
+//                    if (getWindowToken() != null) {
+//                        String messageId;
+//
+//                        if (framework_err == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK) {
+//                            messageId = "Invalid progressive playback";
+//                        } else {
+//                            messageId = "Unknown";
+//                        }
+//
+//                        new AlertDialog.Builder(getContext())
+//                                .setMessage(messageId)
+//                                .setPositiveButton("OK",
+//                                        new DialogInterface.OnClickListener() {
+//                                            public void onClick(DialogInterface dialog, int whichButton) {
+//                                            /* If we get here, there is no onError listener, so
+//                                             * at least inform them that the video is over.
+//                                             */
+//                                                if (mOnCompletionListener != null) {
+//                                                    mOnCompletionListener.onCompletion(mMediaPlayer);
+//                                                }
+//                                            }
+//                                        })
+//                                .setCancelable(false)
+//                                .show();
+//                    }
                     return true;
                 }
             };

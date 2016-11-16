@@ -524,6 +524,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     public void reset() {
+
     }
 
     /**============================ 控制栏处理 ============================*/
@@ -591,7 +592,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * 隐藏除视频外所有视图
      */
     private void _hideAllView(boolean isTouchLock) {
-        mPlayerThumb.setVisibility(View.GONE);
+//        mPlayerThumb.setVisibility(View.GONE);
         mFlTouchLayout.setVisibility(View.GONE);
         mFullscreenTopBar.setVisibility(View.GONE);
         mWindowTopBar.setVisibility(View.GONE);
@@ -1352,6 +1353,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
                 }
                 break;
             case MediaPlayerParams.STATE_ERROR:
+                _pauseDanmaku();
+//                mCurPosition = mVideoView.getCurrentPosition();
+//                mVideoView.release(false);
+//                mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
+//                setVideoPath(mVideoView.getUri());
                 break;
         }
     }
