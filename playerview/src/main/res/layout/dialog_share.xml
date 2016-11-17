@@ -1,33 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/shape_dialog_border">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@drawable/shape_dialog_border"
+              android:orientation="vertical">
 
     <ImageView
         android:id="@+id/iv_screenshot_photo"
         android:layout_width="360dp"
-        android:layout_height="180dp"
-        android:layout_margin="10dp"/>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_height="180dp"/>
 
-    <Button
-        android:id="@+id/btn_cancel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/iv_screenshot_photo"
-        android:layout_marginLeft="30dp"
-        android:background="@drawable/shape_btn_share"
-        android:text="取消"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:background="@color/background_gray"/>
 
-    <Button
-        android:id="@+id/btn_share"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/iv_screenshot_photo"
-        android:layout_marginBottom="10dp"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/shape_btn_share"
-        android:text="分享"/>
-</RelativeLayout>
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/sel_btn_share_left"
+            android:gravity="center"
+            android:text="取消"/>
+
+        <View
+            android:layout_width="1px"
+            android:layout_height="match_parent"
+            android:background="@color/background_gray"/>
+
+        <TextView
+            android:id="@+id/btn_share"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/sel_btn_share_right"
+            android:gravity="center"
+            android:text="分享"/>
+
+    </LinearLayout>
+</LinearLayout>

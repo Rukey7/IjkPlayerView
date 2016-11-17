@@ -63,7 +63,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="5dp"
-            android:background="@drawable/sel_item_background"
             android:padding="10dp"
             android:text="设置"
             android:textColor="@android:color/white"

@@ -1,6 +1,9 @@
 package com.dl7.playerview.widgets;
 
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.dl7.playerview.R;
@@ -19,8 +23,6 @@ import com.dl7.playerview.R;
 
 public class ShareDialog extends DialogFragment {
 
-    private ImageView mIvScreenshot;
-
     private OnDialogClickListener mClickListener;
     private OnDialogDismissListener mDismissListener;
     private Bitmap mBitmap;
@@ -29,13 +31,19 @@ public class ShareDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         getDialog().requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getDialog().getWindow().setWindowAnimations(R.style.AnimateDialog);
-//        window.setGravity(Gravity.BOTTOM);
-//        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Window window = getDialog().getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        window.setWindowAnimations(R.style.AnimateDialog);
+        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
         View view = inflater.inflate(R.layout.dialog_share, container);
-        mIvScreenshot = (ImageView) view.findViewById(R.id.iv_screenshot_photo);
+        final ImageView photo = (ImageView) view.findViewById(R.id.iv_screenshot_photo);
+        ViewGroup.LayoutParams layoutParams = photo.getLayoutParams();
+        layoutParams.width = getResources().getDisplayMetrics().widthPixels * 7 / 10;
+        layoutParams.height = getResources().getDisplayMetrics().heightPixels * 7 / 10;
+        photo.setLayoutParams(layoutParams);
         if (mBitmap != null) {
-            mIvScreenshot.setImageBitmap(mBitmap);
+            photo.setImageBitmap(mBitmap);
         }
         view.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -47,7 +55,7 @@ public class ShareDialog extends DialogFragment {
             @Override
             public void onClick(View v) {
                 if (mClickListener != null) {
-                    mClickListener.onShare(mIvScreenshot.getDrawingCache(), null);
+                    mClickListener.onShare(photo.getDrawingCache(), null);
                 }
                 dismiss();
             }
@@ -58,6 +66,15 @@ public class ShareDialog extends DialogFragment {
     @Override
     public void dismiss() {
         super.dismiss();
+        if (mDismissListener != null) {
+            mDismissListener.onDismiss();
+        }
+    }
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+        super.onCancel(dialog);
+        // 点击外部回调这里
         if (mDismissListener != null) {
             mDismissListener.onDismiss();
         }

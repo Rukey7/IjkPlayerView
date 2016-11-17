@@ -353,6 +353,10 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             mDanmakuView.release();
             mDanmakuView = null;
         }
+        if (mShareDialog == null) {
+            mShareDialog.onDestroy();
+            mShareDialog = null;
+        }
         // 注销广播
         mAttachActivity.unregisterReceiver(mBatteryReceiver);
         mAttachActivity.unregisterReceiver(mScreenReceiver);
@@ -1062,6 +1066,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private OnTouchListener mPlayerTouchListener = new OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+            Log.w("TTAG", "onTouch");
             if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
                 mHandler.removeCallbacks(mHideBarRunnable);
             }
