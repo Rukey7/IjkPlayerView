@@ -18,6 +18,7 @@ package com.dl7.playerview.media;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -207,6 +208,11 @@ public class TextureRenderView extends TextureView implements IRenderView {
     @Override
     public void removeRenderCallback(IRenderCallback callback) {
         mSurfaceCallback.removeRenderCallback(callback);
+    }
+
+    @Override
+    public Bitmap getVideoScreenshot() {
+        return getBitmap();
     }
 
     private SurfaceCallback mSurfaceCallback;

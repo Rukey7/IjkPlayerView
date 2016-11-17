@@ -18,6 +18,7 @@ package com.dl7.playerview.media;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -261,6 +262,16 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         return mUri;
     }
 
+    /**
+     * 截图
+     * @return
+     */
+    public Bitmap getScreenshot() {
+        if (mRenderView != null) {
+            return mRenderView.getVideoScreenshot();
+        }
+        return null;
+    }
     // REMOVED: addSubtitleSource
     // REMOVED: mPendingSubtitleTracks
 
@@ -898,6 +909,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private int mCurrentAspectRatio = s_allAspectRatio[0];
 
     public void setAspectRatio(int aspectRatio) {
+        mCurrentAspectRatio = aspectRatio;
         if (mRenderView != null)
             mRenderView.setAspectRatio(mCurrentAspectRatio);
     }

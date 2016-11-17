@@ -8,6 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/control_bar_height"
         android:background="@color/bg_video_view"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:visibility="gone">
 
@@ -15,7 +16,6 @@
             android:id="@+id/iv_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:background="@drawable/sel_item_background"
             android:padding="10dp"
             android:src="@mipmap/ic_return_back"/>
@@ -24,7 +24,6 @@
             android:id="@+id/tv_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="15dp"
             android:layout_weight="1"
@@ -39,8 +38,7 @@
 
         <ProgressBar
             android:id="@+id/pb_battery"
-            style="@style/ProgressBar_Battery"
-            android:layout_gravity="center"
+            style="@style/ProgressBarBattery"
             android:layout_marginRight="10dp"
             android:max="100"/>
 
@@ -48,19 +46,25 @@
             android:id="@+id/tv_system_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginRight="10dp"
             android:textColor="@android:color/white"
             android:textSize="16sp"/>
+
+        <ImageView
+            android:id="@+id/iv_screenshot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/sel_item_background"
+            android:padding="10dp"
+            android:src="@mipmap/ic_video_screenshot"/>
 
         <TextView
             android:id="@+id/tv_settings"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginRight="10dp"
+            android:layout_marginRight="5dp"
             android:background="@drawable/sel_item_background"
-            android:padding="5dp"
+            android:padding="10dp"
             android:text="设置"
             android:textColor="@android:color/white"
             android:textSize="16sp"/>
@@ -77,8 +81,8 @@
             android:id="@+id/iv_back_window"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="10dp"
             android:background="@drawable/sel_item_background"
+            android:padding="10dp"
             android:src="@mipmap/ic_return_back"/>
     </FrameLayout>
 </merge>

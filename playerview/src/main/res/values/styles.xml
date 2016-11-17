@@ -2,7 +2,7 @@
 <resources>
 
     <!-- 自定义电量进度条 -->
-    <style name="ProgressBar_Battery" parent="@android:style/Widget.ProgressBar.Horizontal">
+    <style name="ProgressBarBattery" parent="@android:style/Widget.ProgressBar.Horizontal">
         <item name="android:layout_width">72px</item>
         <item name="android:layout_height">43px</item>
         <item name="android:background">@mipmap/ic_battery</item>
@@ -33,5 +33,11 @@
         <item name="android:layout_marginLeft">8.0dip</item>
         <item name="android:layout_marginRight">8.0dip</item>
         <item name="android:button">@null</item>
+    </style>
+    
+    <!-- 截图对话框 -->
+    <style name="AnimateDialog">
+        <item name="android:windowEnterAnimation">@anim/dialog_zoom_in</item>
+        <item name="android:windowExitAnimation">@anim/dialog_zoom_out</item>
     </style>
 </resources>

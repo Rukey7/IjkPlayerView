@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -52,6 +53,7 @@ import com.dl7.playerview.utils.SoftInputUtils;
 import com.dl7.playerview.utils.StringUtils;
 import com.dl7.playerview.utils.WindowUtils;
 import com.dl7.playerview.widgets.MarqueeTextView;
+import com.dl7.playerview.widgets.ShareDialog;
 
 import java.io.InputStream;
 import java.lang.annotation.ElementType;
@@ -193,7 +195,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private OnInfoListener mOutsideInfoListener;
     // 禁止翻转，默认为禁止
     private boolean mIsForbidOrientation = true;
-    // 是否只显示全屏状态
+    // 是否固定全屏状态
     private boolean mIsAlwaysFullScreen = false;
     // 记录按退出全屏时间
     private long mExitTime = 0;
@@ -383,7 +385,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @return
      */
     public boolean onBackPressed() {
-        if (recoverFromEditDanmaku()) {
+        if (recoverFromEditVideo()) {
             return true;
         }
         if (mIsAlwaysFullScreen) {
@@ -419,14 +421,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @return
      */
     public PlayerView setVideoPath(String url) {
-        mVideoView.setVideoPath(url);
-        if (mCurPosition != INVALID_VALUE) {
-            seekTo(mCurPosition);
-            mCurPosition = INVALID_VALUE;
-        } else {
-            seekTo(0);
-        }
-        return this;
+        return setVideoPath(Uri.parse(url));
     }
 
     /**
@@ -766,20 +761,19 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         } else if (id == R.id.iv_danmaku_control) {
             _toggleDanmakuShow();
         } else if (id == R.id.tv_open_edit_danmaku) {
-            editDanmaku();
-            _hideAllView(false);
-            mIsShowBar = false;
+            editVideo();
             mEditDanmakuLayout.setVisibility(VISIBLE);
             SoftInputUtils.setEditFocusable(mAttachActivity, mEtDanmakuContent);
         } else if (id == R.id.iv_cancel_send) {
-            recoverFromEditDanmaku();
+            recoverFromEditVideo();
         } else if (id == R.id.iv_do_send) {
-            recoverFromEditDanmaku();
+            recoverFromEditVideo();
             sendDanmaku(mEtDanmakuContent.getText().toString(), false);
             mEtDanmakuContent.setText("");
         } else if (id == R.id.input_options_more) {
-            Log.e("TTAG", "" + mDanmakuOptionsBasic.getX() + " - " + mDanmakuOptionsBasic.getY());
             _toggleMoreColorOptions();
+        } else if (id == R.id.iv_screenshot) {
+            _doScreenshot();
         }
     }
 
@@ -836,7 +830,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             return;
         }
         if (mIsFullscreen && !mIsAlwaysFullScreen) {
-            // 根据角度进行竖屏切换
+            // 根据角度进行竖屏切换，如果为固定全屏则只能横屏切换
             if (orientation >= 0 && orientation <= 30 || orientation >= 330) {
                 // 请求屏幕翻转
                 mAttachActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -988,7 +982,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         @Override
         public boolean onDown(MotionEvent e) {
             isDownTouch = true;
-            isRecoverFromDanmaku = recoverFromEditDanmaku();
+            isRecoverFromDanmaku = recoverFromEditVideo();
             return super.onDown(e);
         }
 
@@ -1648,21 +1642,21 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      */
 
     /**
-     * 弹幕编辑状态：正常未编辑状态、在播放时编辑、暂停时编辑
+     * 视频编辑状态：正常未编辑状态、在播放时编辑、暂停时编辑
      */
-    private static final int NO_EDIT_DANMAKU = 201;
-    private static final int EDIT_DANMAKU_WHEN_PLAY = 202;
-    private static final int EDIT_DANMAKU_WHEN_PAUSE = 203;
+    private static final int NORMAL_STATUS = 501;
+    private static final int INTERRUPT_WHEN_PLAY = 502;
+    private static final int INTERRUPT_WHEN_PAUSE = 503;
 
     @Retention(RetentionPolicy.SOURCE)
     @Target(ElementType.FIELD)
-    @IntDef({NO_EDIT_DANMAKU, EDIT_DANMAKU_WHEN_PLAY, EDIT_DANMAKU_WHEN_PAUSE})
-    @interface DanmakuStatus {
+    @IntDef({NORMAL_STATUS, INTERRUPT_WHEN_PLAY, INTERRUPT_WHEN_PAUSE})
+    @interface VideoStatus {
     }
 
     private
-    @DanmakuStatus
-    int mDanmakuStatus = NO_EDIT_DANMAKU;
+    @VideoStatus
+    int mVideoStatus = NORMAL_STATUS;
 
     // 弹幕开源控件
     private IDanmakuView mDanmakuView;
@@ -1891,33 +1885,35 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
-     * 在编辑弹幕前调用，会控制视频的播放状态，配合{@link #recoverFromEditDanmaku()}调用
+     * 编辑操作前调用，会控制视频的播放状态，如在编辑弹幕前调用，配合{@link #recoverFromEditVideo()}使用
      */
-    public void editDanmaku() {
+    public void editVideo() {
         if (mVideoView.isPlaying()) {
             pause();
-            mDanmakuStatus = EDIT_DANMAKU_WHEN_PLAY;
+            mVideoStatus = INTERRUPT_WHEN_PLAY;
         } else {
-            mDanmakuStatus = EDIT_DANMAKU_WHEN_PAUSE;
+            mVideoStatus = INTERRUPT_WHEN_PAUSE;
         }
+        _hideAllView(false);
+        mIsShowBar = false;
     }
 
     /**
-     * 从弹幕编辑状态返回，取消编辑或发射弹幕后配合{@link #editDanmaku()}调用
+     * 从编辑状态返回，如取消编辑或发射弹幕后配合{@link #editVideo()}调用
      *
      * @return 是否从编辑状态回退
      */
-    public boolean recoverFromEditDanmaku() {
-        if (mDanmakuStatus == NO_EDIT_DANMAKU) {
+    public boolean recoverFromEditVideo() {
+        if (mVideoStatus == NORMAL_STATUS) {
             return false;
         }
         if (mIsFullscreen) {
             _recoverScreen();
         }
-        if (mDanmakuStatus == EDIT_DANMAKU_WHEN_PLAY) {
+        if (mVideoStatus == INTERRUPT_WHEN_PLAY) {
             start();
         }
-        mDanmakuStatus = NO_EDIT_DANMAKU;
+        mVideoStatus = NORMAL_STATUS;
         return true;
     }
 
@@ -2009,20 +2005,39 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
-     * ============================ 电量、时间、锁屏 ============================
+     * ============================ 电量、时间、锁屏、截屏 ============================
      */
 
     // 电量显示
     private ProgressBar mPbBatteryLevel;
     // 系统时间显示
     private TextView mTvSystemTime;
+    // 截图按钮
+    private ImageView mIvScreenshot;
     // 电量变化广播接收器
     private BatteryBroadcastReceiver mBatteryReceiver;
     // 锁屏状态广播接收器
     private ScreenBroadcastReceiver mScreenReceiver;
     // 判断是否出现锁屏,有则需要重新设置渲染器，不然视频会没有动画只有声音
     private boolean mIsScreenLocked = false;
-
+    // 截图分享弹框
+    private ShareDialog mShareDialog;
+    // 对话框点击监听，一个内部一个外部
+    private ShareDialog.OnDialogClickListener mDialogClickListener;
+    private ShareDialog.OnDialogClickListener mInsideDialogClickListener = new ShareDialog.OnDialogClickListener() {
+        @Override
+        public void onShare(Bitmap bitmap, Uri uri) {
+            if (mDialogClickListener != null) {
+                mDialogClickListener.onShare(bitmap, mVideoView.getUri());
+            }
+        }
+    };
+    private ShareDialog.OnDialogDismissListener mDialogDismissListener = new ShareDialog.OnDialogDismissListener() {
+        @Override
+        public void onDismiss() {
+            recoverFromEditVideo();
+        }
+    };
 
     /**
      * 初始化电量、锁屏、时间处理
@@ -2033,9 +2048,31 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mTvSystemTime.setText(StringUtils.getCurFormatTime());
         mBatteryReceiver = new BatteryBroadcastReceiver();
         mScreenReceiver = new ScreenBroadcastReceiver();
-        //注册一个接受广播类型
+        //注册接受广播
         mAttachActivity.registerReceiver(mBatteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         mAttachActivity.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
+        mIvScreenshot = (ImageView) findViewById(R.id.iv_screenshot);
+        mIvScreenshot.setOnClickListener(this);
+    }
+
+    private void _doScreenshot() {
+        editVideo();
+        _showShareDialog(mVideoView.getScreenshot());
+    }
+
+    private void _showShareDialog(Bitmap bitmap) {
+        if (mShareDialog == null) {
+            mShareDialog = new ShareDialog();
+            mShareDialog.setClickListener(mInsideDialogClickListener);
+            mShareDialog.setDismissListener(mDialogDismissListener);
+        }
+        mShareDialog.setScreenshotPhoto(bitmap);
+        mShareDialog.show(mAttachActivity.getSupportFragmentManager(), "share");
+    }
+
+    public PlayerView setDialogClickListener(ShareDialog.OnDialogClickListener dialogClickListener) {
+        mDialogClickListener = dialogClickListener;
+        return this;
     }
 
     /**

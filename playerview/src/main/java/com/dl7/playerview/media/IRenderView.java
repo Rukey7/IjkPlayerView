@@ -16,6 +16,7 @@
 
 package com.dl7.playerview.media;
 
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -57,6 +58,8 @@ public interface IRenderView {
     void addRenderCallback(@NonNull IRenderCallback callback);
 
     void removeRenderCallback(@NonNull IRenderCallback callback);
+
+    Bitmap getVideoScreenshot();
 
     interface ISurfaceHolder {
         void bindToMediaPlayer(IMediaPlayer mp);

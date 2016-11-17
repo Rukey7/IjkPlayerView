@@ -6,8 +6,8 @@ import android.widget.TextView;
 
 /**
  * Created by Rukey7 on 2016/11/14.
+ * 跑马灯TextView
  */
-
 public class MarqueeTextView extends TextView {
 
     public MarqueeTextView(Context context) {
