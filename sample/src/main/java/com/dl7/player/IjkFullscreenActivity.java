@@ -4,18 +4,18 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 
-import com.dl7.playerview.media.PlayerView;
+import com.dl7.playerview.media.IjkPlayerView;
 
 public class IjkFullscreenActivity extends AppCompatActivity {
 
     private static final String VIDEO_URL = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4";
     private static final String VIDEO_URL_HD = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f30.mp4";
-    PlayerView mPlayerView;
+    IjkPlayerView mPlayerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPlayerView = new PlayerView(this);
+        mPlayerView = new IjkPlayerView(this);
         setContentView(mPlayerView);
         mPlayerView.init()
                 .alwaysFullScreen()
@@ -23,7 +23,7 @@ public class IjkFullscreenActivity extends AppCompatActivity {
                 .enableDanmaku()
                 .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
                 .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
-                .setMediaQuality(PlayerView.MEDIA_QUALITY_SUPER)
+                .setMediaQuality(IjkPlayerView.MEDIA_QUALITY_SUPER)
                 .start();
     }
     @Override

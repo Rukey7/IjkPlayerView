@@ -1,6 +1,6 @@
 package com.dl7.playerview.media;
 
-import com.dl7.playerview.media.PlayerView.MediaQuality;
+import com.dl7.playerview.media.IjkPlayerView.MediaQuality;
 
 /**
  * Created by Rukey7 on 2016/10/29.

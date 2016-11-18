@@ -49,12 +49,17 @@ import android.widget.Toast;
 import com.dl7.playerview.R;
 import com.dl7.playerview.utils.AnimHelper;
 import com.dl7.playerview.utils.NavUtils;
+import com.dl7.playerview.utils.SDCardUtils;
 import com.dl7.playerview.utils.SoftInputUtils;
 import com.dl7.playerview.utils.StringUtils;
 import com.dl7.playerview.utils.WindowUtils;
 import com.dl7.playerview.widgets.MarqueeTextView;
 import com.dl7.playerview.widgets.ShareDialog;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -85,7 +90,7 @@ import static tv.danmaku.ijk.media.player.IMediaPlayer.OnInfoListener;
 /**
  * Created by long on 2016/10/24.
  */
-public class PlayerView extends FrameLayout implements View.OnClickListener {
+public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     // 进度条最大值
     private static final int MAX_VIDEO_SEEK = 1000;
@@ -201,11 +206,11 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private long mExitTime = 0;
 
 
-    public PlayerView(Context context) {
+    public IjkPlayerView(Context context) {
         this(context, null);
     }
 
-    public PlayerView(Context context, AttributeSet attrs) {
+    public IjkPlayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         _initView(context);
     }
@@ -413,7 +418,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      *
      * @return
      */
-    public PlayerView init() {
+    public IjkPlayerView init() {
         _initMediaPlayer();
         return this;
     }
@@ -424,7 +429,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param url
      * @return
      */
-    public PlayerView setVideoPath(String url) {
+    public IjkPlayerView setVideoPath(String url) {
         return setVideoPath(Uri.parse(url));
     }
 
@@ -434,7 +439,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param uri
      * @return
      */
-    public PlayerView setVideoPath(Uri uri) {
+    public IjkPlayerView setVideoPath(Uri uri) {
         mVideoView.setVideoURI(uri);
         if (mCurPosition != INVALID_VALUE) {
             seekTo(mCurPosition);
@@ -450,7 +455,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      *
      * @param title
      */
-    public PlayerView setTitle(String title) {
+    public IjkPlayerView setTitle(String title) {
         mTvTitle.setText(title);
         return this;
     }
@@ -458,7 +463,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     /**
      * 设置只显示全屏状态
      */
-    public PlayerView alwaysFullScreen() {
+    public IjkPlayerView alwaysFullScreen() {
         mIsAlwaysFullScreen = true;
         _setFullScreen(true);
         mIvFullscreen.setVisibility(GONE);
@@ -786,7 +791,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     /**
      * 使能视频翻转
      */
-    public PlayerView enableOrientation() {
+    public IjkPlayerView enableOrientation() {
         mIsForbidOrientation = false;
         mOrientationListener.enable();
         return this;
@@ -1484,7 +1489,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param mediaSuper  超清
      * @param mediaBd     1080P
      */
-    public PlayerView setVideoSource(String mediaSmooth, String mediaMedium, String mediaHigh, String mediaSuper, String mediaBd) {
+    public IjkPlayerView setVideoSource(String mediaSmooth, String mediaMedium, String mediaHigh, String mediaSuper, String mediaBd) {
         boolean isSelect = true;
         mQualityData = new ArrayList<>();
         if (mediaSmooth != null) {
@@ -1539,7 +1544,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      *                {@link #MEDIA_QUALITY_SMOOTH,#MEDIA_QUALITY_MEDIUM,#MEDIA_QUALITY_HIGH,#MEDIA_QUALITY_SUPER,#MEDIA_QUALITY_BD}
      * @return
      */
-    public PlayerView setMediaQuality(@MediaQuality int quality) {
+    public IjkPlayerView setMediaQuality(@MediaQuality int quality) {
         if (mCurSelectQuality == quality || mVideoSource.get(quality) == null) {
             return this;
         }
@@ -1598,7 +1603,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      *
      * @param targetPosition 目标进度,单位:ms
      */
-    public PlayerView setSkipTip(int targetPosition) {
+    public IjkPlayerView setSkipTip(int targetPosition) {
         mSkipPosition = targetPosition;
         return this;
     }
@@ -1804,7 +1809,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      *
      * @return
      */
-    public PlayerView enableDanmaku() {
+    public IjkPlayerView enableDanmaku() {
         mIsEnableDanmaku = true;
         _initDanmaku();
         if (mIsAlwaysFullScreen) {
@@ -1819,7 +1824,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param stream 弹幕资源
      * @return
      */
-    public PlayerView setDanmakuSource(InputStream stream) {
+    public IjkPlayerView setDanmakuSource(InputStream stream) {
         if (stream == null) {
             return this;
         }
@@ -1845,7 +1850,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
      * @param isShow 是否显示
      * @return
      */
-    public PlayerView showOrHideDanmaku(boolean isShow) {
+    public IjkPlayerView showOrHideDanmaku(boolean isShow) {
         if (isShow) {
             mIvDanmakuControl.setSelected(false);
             mDanmakuView.show();
@@ -2027,7 +2032,7 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
     private boolean mIsScreenLocked = false;
     // 截图分享弹框
     private ShareDialog mShareDialog;
-    // 对话框点击监听，一个内部一个外部
+    // 对话框点击监听，内部和外部
     private ShareDialog.OnDialogClickListener mDialogClickListener;
     private ShareDialog.OnDialogClickListener mInsideDialogClickListener = new ShareDialog.OnDialogClickListener() {
         @Override
@@ -2043,6 +2048,8 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
             recoverFromEditVideo();
         }
     };
+    // 截图保存路径
+    private File mSaveDir;
 
     /**
      * 初始化电量、锁屏、时间处理
@@ -2058,11 +2065,28 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mAttachActivity.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
         mIvScreenshot = (ImageView) findViewById(R.id.iv_screenshot);
         mIvScreenshot.setOnClickListener(this);
+        if (SDCardUtils.isAvailable()) {
+            _createSaveDir(SDCardUtils.getRootPath() + File.separator + "IjkPlayView");
+        }
     }
 
     private void _doScreenshot() {
         editVideo();
-        _showShareDialog(mVideoView.getScreenshot());
+        Bitmap screenshot = mVideoView.getScreenshot();
+        if (mDialogClickListener == null) {
+            File file = new File(mSaveDir, System.currentTimeMillis() + ".jpg");
+            try {
+                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+                screenshot.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                bos.flush();
+                bos.close();
+                Toast.makeText(mAttachActivity, "保存成功，路径为" + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                Toast.makeText(mAttachActivity, "保存失败", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            _showShareDialog(mVideoView.getScreenshot());
+        }
     }
 
     private void _showShareDialog(Bitmap bitmap) {
@@ -2075,9 +2099,19 @@ public class PlayerView extends FrameLayout implements View.OnClickListener {
         mShareDialog.show(mAttachActivity.getSupportFragmentManager(), "share");
     }
 
-    public PlayerView setDialogClickListener(ShareDialog.OnDialogClickListener dialogClickListener) {
+    public IjkPlayerView setDialogClickListener(ShareDialog.OnDialogClickListener dialogClickListener) {
         mDialogClickListener = dialogClickListener;
         return this;
+    }
+
+    private void _createSaveDir(String path) {
+        mSaveDir = new File(path);
+        if (!mSaveDir.exists()) {
+            mSaveDir.mkdirs();
+        } else if (!mSaveDir.isDirectory()) {
+            mSaveDir.delete();
+            mSaveDir.mkdirs();
+        }
     }
 
     /**

@@ -15,7 +15,7 @@
         android:background="?attr/colorPrimary"
         app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
-    <com.dl7.playerview.media.PlayerView
+    <com.dl7.playerview.media.IjkPlayerView
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="200dp"/>
