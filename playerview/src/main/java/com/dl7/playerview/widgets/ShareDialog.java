@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.dl7.playerview.R;
 
@@ -26,6 +27,7 @@ public class ShareDialog extends DialogFragment {
     private OnDialogClickListener mClickListener;
     private OnDialogDismissListener mDismissListener;
     private Bitmap mBitmap;
+    private boolean mIsShareMode = false;
 
     @Nullable
     @Override
@@ -51,11 +53,15 @@ public class ShareDialog extends DialogFragment {
                 dismiss();
             }
         });
-        view.findViewById(R.id.btn_share).setOnClickListener(new View.OnClickListener() {
+        TextView tvShare = (TextView) view.findViewById(R.id.btn_share);
+        if (mIsShareMode) {
+            tvShare.setText("分享");
+        }
+        tvShare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mClickListener != null) {
-                    mClickListener.onShare(photo.getDrawingCache(), null);
+                    mClickListener.onShare(mBitmap, null);
                 }
                 dismiss();
             }
@@ -90,6 +96,10 @@ public class ShareDialog extends DialogFragment {
 
     public void setDismissListener(OnDialogDismissListener dismissListener) {
         mDismissListener = dismissListener;
+    }
+
+    public void setShareMode(boolean shareMode) {
+        mIsShareMode = shareMode;
     }
 
     public interface OnDialogClickListener {

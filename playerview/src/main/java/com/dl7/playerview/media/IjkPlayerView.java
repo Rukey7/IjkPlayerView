@@ -358,8 +358,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mDanmakuView.release();
             mDanmakuView = null;
         }
-        if (mShareDialog == null) {
-            mShareDialog.onDestroy();
+        if (mShareDialog != null) {
+            mShareDialog.dismiss();
             mShareDialog = null;
         }
         // 注销广播
@@ -2040,6 +2040,17 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             if (mDialogClickListener != null) {
                 mDialogClickListener.onShare(bitmap, mVideoView.getUri());
             }
+            File file = new File(mSaveDir, System.currentTimeMillis() + ".jpg");
+            try {
+                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                bos.flush();
+                bos.close();
+                Toast.makeText(mAttachActivity, "保存成功，路径为:" + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                Toast.makeText(mAttachActivity, "保存本地失败", Toast.LENGTH_SHORT).show();
+            }
+
         }
     };
     private ShareDialog.OnDialogDismissListener mDialogDismissListener = new ShareDialog.OnDialogDismissListener() {
@@ -2070,40 +2081,48 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
+    /**
+     * 截图
+     */
     private void _doScreenshot() {
         editVideo();
-        Bitmap screenshot = mVideoView.getScreenshot();
-        if (mDialogClickListener == null) {
-            File file = new File(mSaveDir, System.currentTimeMillis() + ".jpg");
-            try {
-                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
-                screenshot.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-                bos.flush();
-                bos.close();
-                Toast.makeText(mAttachActivity, "保存成功，路径为" + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                Toast.makeText(mAttachActivity, "保存失败", Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            _showShareDialog(mVideoView.getScreenshot());
-        }
+        _showShareDialog(mVideoView.getScreenshot());
     }
 
+    /**
+     * 显示对话框
+     * @param bitmap
+     */
     private void _showShareDialog(Bitmap bitmap) {
         if (mShareDialog == null) {
             mShareDialog = new ShareDialog();
             mShareDialog.setClickListener(mInsideDialogClickListener);
             mShareDialog.setDismissListener(mDialogDismissListener);
+            if (mDialogClickListener != null) {
+                mShareDialog.setShareMode(true);
+            }
         }
         mShareDialog.setScreenshotPhoto(bitmap);
         mShareDialog.show(mAttachActivity.getSupportFragmentManager(), "share");
     }
 
+    /**
+     * 设置截图分享监听
+     * @param dialogClickListener
+     * @return
+     */
     public IjkPlayerView setDialogClickListener(ShareDialog.OnDialogClickListener dialogClickListener) {
         mDialogClickListener = dialogClickListener;
+        if (mShareDialog != null) {
+            mShareDialog.setShareMode(true);
+        }
         return this;
     }
 
+    /**
+     * 创建目录
+     * @param path
+     */
     private void _createSaveDir(String path) {
         mSaveDir = new File(path);
         if (!mSaveDir.exists()) {
@@ -2112,6 +2131,14 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mSaveDir.delete();
             mSaveDir.mkdirs();
         }
+    }
+
+    /**
+     * 设置截图保存路径
+     * @param path
+     */
+    public void setSaveDir(String path) {
+        _createSaveDir(path);
     }
 
     /**

@@ -45,7 +45,7 @@
             android:layout_weight="1"
             android:background="@drawable/sel_btn_share_right"
             android:gravity="center"
-            android:text="分享"/>
+            android:text="保存"/>
 
     </LinearLayout>
 </LinearLayout>

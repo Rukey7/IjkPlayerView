@@ -12,4 +12,6 @@
 
     <alpha android:fromAlpha="1"
            android:toAlpha="0"/>
+
+    <translate android:toYDelta="900"/>
 </set>
