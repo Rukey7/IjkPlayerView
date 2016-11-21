@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.dl7.player.MainActivity">
+    tools:context="com.dl7.playerdemo.MainActivity">
 
     <Button
         android:id="@+id/video_view"

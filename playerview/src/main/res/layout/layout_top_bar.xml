@@ -20,7 +20,7 @@
             android:padding="10dp"
             android:src="@mipmap/ic_return_back"/>
 
-        <com.dl7.playerview.widgets.MarqueeTextView
+        <com.dl7.player.widgets.MarqueeTextView
             android:id="@+id/tv_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
