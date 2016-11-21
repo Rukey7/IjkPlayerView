@@ -8,6 +8,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.PointF;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.BatteryManager;
@@ -48,6 +49,7 @@ import android.widget.Toast;
 
 import com.dl7.player.R;
 import com.dl7.player.utils.AnimHelper;
+import com.dl7.player.utils.MotionEventUtils;
 import com.dl7.player.utils.NavUtils;
 import com.dl7.player.utils.SDCardUtils;
 import com.dl7.player.utils.SoftInputUtils;
@@ -1069,16 +1071,64 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 触摸监听
      */
     private OnTouchListener mPlayerTouchListener = new OnTouchListener() {
+        private static final int NORMAL = 1;
+        private static final int INVALID_POINTER = 2;
+        private static final int ZOOM_AND_ROTATE = 3;
+
+        private int mode = NORMAL;
+        private PointF midPoint = new PointF(0, 0);
+        private float degree = 0;
+
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            Log.w("TTAG", "onTouch");
-            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
-                mHandler.removeCallbacks(mHideBarRunnable);
+            switch (MotionEventCompat.getActionMasked(event)) {
+                case MotionEvent.ACTION_DOWN:
+                    mode = NORMAL;
+                    mHandler.removeCallbacks(mHideBarRunnable);
+                    break;
+
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    if (event.getPointerCount() == 3) {
+                        mode = ZOOM_AND_ROTATE;
+                        MotionEventUtils.midPoint(midPoint, event);
+                        degree = MotionEventUtils.rotation(event, midPoint);
+                    } else {
+                        mode = INVALID_POINTER;
+                    }
+                    Log.i("TTAG", "getPointerCount " + event.getPointerCount());
+//                    Log.i("TTAG", "calcSpacing " + MotionEventUtils.calcSpacing(event));
+//                    Log.i("TTAG", "rotation " + MotionEventUtils.rotation(event));
+//                    Log.i("TTAG", "midPoint " + midPoint.toString());
+                    break;
+
+                case MotionEvent.ACTION_MOVE:
+                    if (mode == ZOOM_AND_ROTATE) {
+                        float newRotate = MotionEventUtils.rotation(event, midPoint);
+                        Log.w("TTAG", "rotation " + (newRotate - degree));
+                        mVideoView.setVideoRotation((int) (newRotate - degree));
+                    }
+                    break;
+
+                case MotionEvent.ACTION_POINTER_UP:
+//                    if (event.getPointerCount() == 4) {
+//                        mode = ZOOM_AND_ROTATE;
+//                    } else {
+//                        mode = INVALID_POINTER;
+//                    }
+                    mode = INVALID_POINTER;
+                    Log.d("TTAG", "getPointerCount " + event.getPointerCount());
+//                    mode = NORMAL;
+                    break;
             }
-            if (mGestureDetector.onTouchEvent(event)) {
-                return true;
+            if (mode == NORMAL) {
+                if (mGestureDetector.onTouchEvent(event)) {
+                    return true;
+                }
             }
-            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_UP) {
+//            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+//                mHandler.removeCallbacks(mHideBarRunnable);
+//            }
+            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_UP && mode == NORMAL) {
                 _endGesture();
             }
             return false;
@@ -2091,6 +2141,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 显示对话框
+     *
      * @param bitmap
      */
     private void _showShareDialog(Bitmap bitmap) {
@@ -2108,6 +2159,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 设置截图分享监听
+     *
      * @param dialogClickListener
      * @return
      */
@@ -2121,6 +2173,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 创建目录
+     *
      * @param path
      */
     private void _createSaveDir(String path) {
@@ -2135,6 +2188,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 设置截图保存路径
+     *
      * @param path
      */
     public IjkPlayerView setSaveDir(String path) {

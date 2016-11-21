@@ -112,6 +112,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
     public void setVideoRotation(int degree) {
         mMeasureHelper.setVideoRotation(degree);
         setRotation(degree);
+        Log.e("TTAG", ""+degree);
     }
 
     @Override

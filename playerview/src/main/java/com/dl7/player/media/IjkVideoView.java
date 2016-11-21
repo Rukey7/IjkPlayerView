@@ -189,6 +189,11 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         mRenderView.setVideoRotation(mVideoRotationDegree);
     }
 
+    public void setVideoRotation(int degree) {
+        mRenderView.setVideoRotation(degree);
+    }
+
+
     /**
      * 设置渲染器
      *
