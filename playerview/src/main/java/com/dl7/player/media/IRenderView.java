@@ -17,6 +17,7 @@
 package com.dl7.player.media;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -59,6 +60,11 @@ public interface IRenderView {
 
     void removeRenderCallback(@NonNull IRenderCallback callback);
 
+    // add, 设置 Matrix，来做缩放操作
+    void setTransform(Matrix transform);
+    // add, 获取 Matrix，来做缩放操作
+    Matrix getTransform();
+    // add, 获取截图
     Bitmap getVideoScreenshot();
 
     interface ISurfaceHolder {

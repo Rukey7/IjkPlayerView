@@ -19,6 +19,8 @@ package com.dl7.player.media;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -68,6 +70,10 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private int mSurfaceWidth;
     private int mSurfaceHeight;
     private int mVideoRotationDegree;
+    // add,屏幕将要旋转的角度
+    private int mVideoTargetRotationDegree;
+    // add,原始的Matrix
+    private Matrix mOriginalMatrix;
     private IMediaController mMediaController;
     private IMediaPlayer.OnCompletionListener mOnCompletionListener;
     private IMediaPlayer.OnPreparedListener mOnPreparedListener;
@@ -190,9 +196,62 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     }
 
     public void setVideoRotation(int degree) {
-        mRenderView.setVideoRotation(degree);
+        mVideoTargetRotationDegree = mVideoRotationDegree + degree;
+        mRenderView.setVideoRotation(mVideoTargetRotationDegree);
     }
 
+    public Matrix getVideoTransform() {
+        if (mOriginalMatrix == null) {
+            mOriginalMatrix = mRenderView.getTransform();
+            RectF rectF = new RectF();
+            mOriginalMatrix.mapRect(rectF);
+            Log.e("TTAG", rectF.centerX() + " - "+ rectF.centerY());
+            Log.w("TTAG", rectF.toString());
+        }
+        return mRenderView.getTransform();
+    }
+
+    public void setVideoTransform(Matrix transform) {
+//        transform.preTranslate(-mVideoWidth / 2, -mVideoHeight / 2);
+//        transform.postTranslate(mVideoWidth / 2, mVideoHeight / 2);
+        mRenderView.setTransform(transform);
+    }
+
+    private float mVideoScale = 1.0f;
+
+    public void adjustVideoView(float scale) {
+        final int degree = (mVideoTargetRotationDegree + 360) % 360;
+        if (degree > 315 || degree <= 45) {
+            mVideoRotationDegree = 0;
+        } else if (degree > 45 && degree <= 135) {
+            mVideoRotationDegree = 90;
+        } else if (degree > 135 && degree <= 225) {
+            mVideoRotationDegree = 180;
+        } else if (degree > 225 && degree <= 315) {
+            mVideoRotationDegree = 270;
+        } else {
+            mVideoRotationDegree = 0;
+        }
+        mRenderView.setVideoRotation(mVideoRotationDegree);
+        mVideoTargetRotationDegree = 0;
+
+        mVideoScale *= scale;
+        int width = (int) (mRenderView.getView().getWidth() * mVideoScale);
+        int height = (int) (mRenderView.getView().getHeight() * mVideoScale);
+        Matrix matrix = getVideoTransform();
+        RectF rectF = new RectF();
+        matrix.mapRect(rectF);
+        matrix.postTranslate(mRenderView.getView().getWidth() * (1 - mVideoScale) / 2 - rectF.centerX(),
+                mRenderView.getView().getHeight() * (1 - mVideoScale) / 2 -rectF.centerY());
+        mRenderView.setTransform(matrix);
+        Log.d("TTAG", mRenderView.getView().getWidth() + " - " +  mRenderView.getView().getHeight());
+    }
+
+    public void resetVideoView() {
+        mRenderView.setTransform(mOriginalMatrix);
+        mRenderView.setVideoRotation(mVideoRotationDegree);
+        mVideoTargetRotationDegree = 0;
+    }
 
     /**
      * 设置渲染器

@@ -8,7 +8,9 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.BatteryManager;
@@ -206,6 +208,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private boolean mIsAlwaysFullScreen = false;
     // 记录按退出全屏时间
     private long mExitTime = 0;
+    private Matrix matrix = new Matrix();
+    private Matrix saveMatrix = new Matrix();
 
 
     public IjkPlayerView(Context context) {
@@ -1079,6 +1083,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         private PointF midPoint = new PointF(0, 0);
         private float degree = 0;
         private int fingerFlag = INVALID_VALUE;
+        private float oldDist;
+        private float scale;
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -1093,24 +1099,33 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                         mode = ZOOM_AND_ROTATE;
                         MotionEventUtils.midPoint(midPoint, event);
                         fingerFlag = MotionEventUtils.calcFingerFlag(event);
-                        degree = MotionEventUtils.rotation(event, midPoint);
+                        degree = MotionEventUtils.rotation(event, fingerFlag);
+                        oldDist = MotionEventUtils.calcSpacing(event, fingerFlag);
+                        saveMatrix = mVideoView.getVideoTransform();
                     } else {
                         mode = INVALID_POINTER;
                     }
-                    Log.i("TTAG", "getPointerCount " + event.getPointerCount());
                     break;
 
                 case MotionEvent.ACTION_MOVE:
                     if (mode == ZOOM_AND_ROTATE) {
-                        float newRotate = MotionEventUtils.rotation(event, midPoint);
-                        Log.w("TTAG", "rotation " + (newRotate - degree));
+                        float newRotate = MotionEventUtils.rotation(event, fingerFlag);
                         mVideoView.setVideoRotation((int) (newRotate - degree));
+                        matrix.set(saveMatrix);
+                        float newDist = MotionEventUtils.calcSpacing(event, fingerFlag);
+                        scale = newDist / oldDist;
+                        matrix.postScale(scale, scale, midPoint.x, midPoint.y);
+                        mVideoView.setVideoTransform(matrix);
                     }
                     break;
 
                 case MotionEvent.ACTION_POINTER_UP:
+                    if (mode == ZOOM_AND_ROTATE) {
+                        mVideoView.adjustVideoView(scale);
+                        RectF rectF = new RectF();
+                        matrix.mapRect(rectF);
+                    }
                     mode = INVALID_POINTER;
-                    Log.d("TTAG", "getPointerCount " + event.getPointerCount());
                     break;
             }
             if (mode == NORMAL) {

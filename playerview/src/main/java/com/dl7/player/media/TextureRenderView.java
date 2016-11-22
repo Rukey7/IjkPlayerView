@@ -19,6 +19,7 @@ package com.dl7.player.media;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -112,7 +113,6 @@ public class TextureRenderView extends TextureView implements IRenderView {
     public void setVideoRotation(int degree) {
         mMeasureHelper.setVideoRotation(degree);
         setRotation(degree);
-        Log.e("TTAG", ""+degree);
     }
 
     @Override
@@ -209,6 +209,11 @@ public class TextureRenderView extends TextureView implements IRenderView {
     @Override
     public void removeRenderCallback(IRenderCallback callback) {
         mSurfaceCallback.removeRenderCallback(callback);
+    }
+
+    @Override
+    public Matrix getTransform() {
+        return getTransform(null);
     }
 
     @Override

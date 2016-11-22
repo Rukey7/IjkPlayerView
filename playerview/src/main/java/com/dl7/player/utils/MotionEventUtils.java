@@ -1,7 +1,6 @@
 package com.dl7.player.utils;
 
 import android.graphics.PointF;
-import android.util.Log;
 import android.view.MotionEvent;
 
 /**
@@ -25,6 +24,24 @@ public final class MotionEventUtils {
     public static float calcSpacing(MotionEvent event, int index1, int index2) {
         float x = event.getX(index1) - event.getX(index2);
         float y = event.getY(index1) - event.getY(index2);
+        return (float) Math.sqrt(x * x + y * y);
+    }
+
+    public static float calcSpacing(MotionEvent event, int fingerFlag) {
+        float x, y;
+        if (FINGER_FLAG_1 == fingerFlag) {
+            x = (event.getX(0) + event.getX(1)) / 2 - event.getX(2);
+            y = (event.getY(0) + event.getY(1)) / 2 - event.getY(2);
+        } else if (FINGER_FLAG_2 == fingerFlag) {
+            x = (event.getX(0) + event.getX(2)) / 2 - event.getX(1);
+            y = (event.getY(0) + event.getY(2)) / 2 - event.getY(1);
+        } else if (FINGER_FLAG_3 == fingerFlag) {
+            x = (event.getX(2) + event.getX(1)) / 2 - event.getX(0);
+            y = (event.getY(2) + event.getY(1)) / 2 - event.getY(0);
+        } else {
+            x = (event.getX(0) - event.getX(1));
+            y = (event.getY(0) - event.getY(1));
+        }
         return (float) Math.sqrt(x * x + y * y);
     }
 
@@ -59,27 +76,39 @@ public final class MotionEventUtils {
      * @param event
      * @return Degrees
      */
-    public static float rotation(MotionEvent event, PointF midPoint) {
+    public static float rotation(MotionEvent event, int fingerFlag) {
+        double delta_x, delta_y;
+        if (FINGER_FLAG_1 == fingerFlag) {
+            delta_x = (event.getX(0) + event.getX(1)) / 2 - event.getX(2);
+            delta_y = (event.getY(0) + event.getY(1)) / 2 - event.getY(2);
+        } else if (FINGER_FLAG_2 == fingerFlag) {
+            delta_x = (event.getX(0) + event.getX(2)) / 2 - event.getX(1);
+            delta_y = (event.getY(0) + event.getY(2)) / 2 - event.getY(1);
+        } else if (FINGER_FLAG_3 == fingerFlag) {
+            delta_x = (event.getX(2) + event.getX(1)) / 2 - event.getX(0);
+            delta_y = (event.getY(2) + event.getY(1)) / 2 - event.getY(0);
+        } else {
+            delta_x = (event.getX(0) - event.getX(1));
+            delta_y = (event.getY(0) - event.getY(1));
+        }
+        double radians = Math.atan2(delta_y, delta_x);
+        return (float) Math.toDegrees(radians);
+    }
+//    public static float rotation(MotionEvent event, PointF midPoint) {
 //        double deltaX1 = event.getX(0) - midPoint.x;
 //        double deltaX2 = event.getX(1) - midPoint.x;
 //        double deltaX3 = event.getX(2) - midPoint.x;
 //        double deltaY1 = event.getY(0) - midPoint.y;
 //        double deltaY2 = event.getY(1) - midPoint.y;
 //        double deltaY3 = event.getY(2) - midPoint.y;
-
-        double deltaX1 = event.getX(0) - event.getX(2);
-        double deltaX2 = event.getX(1) - event.getX(2);
-        double deltaX3 = event.getX(2) - event.getX(2);
-        double deltaY1 = event.getY(0) - midPoint.y;
-        double deltaY2 = event.getY(1) - midPoint.y;
-        double deltaY3 = event.getY(2) - midPoint.y;
-        double radians1 = Math.atan2(deltaY1, deltaX1);
-        double radians2 = Math.atan2(deltaY2, deltaX2);
-        double radians3 = Math.atan2(deltaY3, deltaX3);
-        float degree1 = (float) Math.toDegrees(radians1);
-        float degree2 = (float) Math.toDegrees(radians2);
-        float degree3 = (float) Math.toDegrees(radians3);
-        Log.e("TTAG", degree1 + " - " + degree2 + " - " + degree3);
-        return (float) Math.toDegrees(degree1 + degree2 + degree3);
-    }
+//
+//        double radians1 = Math.atan2(deltaY1, deltaX1);
+//        double radians2 = Math.atan2(deltaY2, deltaX2);
+//        double radians3 = Math.atan2(deltaY3, deltaX3);
+//        float degree1 = (float) Math.toDegrees(radians1);
+//        float degree2 = (float) Math.toDegrees(radians2);
+//        float degree3 = (float) Math.toDegrees(radians3);
+//        Log.e("TTAG", degree1 + " - " + degree2 + " - " + degree3);
+//        return (float) Math.toDegrees(degree1 + degree2 + degree3);
+//    }
 }
