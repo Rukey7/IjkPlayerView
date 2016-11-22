@@ -10,28 +10,47 @@ import android.view.MotionEvent;
 
 public final class MotionEventUtils {
 
+    public static final int FINGER_FLAG_1 = 601;
+    public static final int FINGER_FLAG_2 = 602;
+    public static final int FINGER_FLAG_3 = 603;
+
     private MotionEventUtils() {
         throw new AssertionError();
     }
 
 
-
     /**
      * Determine the space between the first two fingers
      */
-    public static float calcSpacing(MotionEvent event) {
-        float x = event.getX(0) - event.getX(1);
-        float y = event.getY(0) - event.getY(1);
+    public static float calcSpacing(MotionEvent event, int index1, int index2) {
+        float x = event.getX(index1) - event.getX(index2);
+        float y = event.getY(index1) - event.getY(index2);
         return (float) Math.sqrt(x * x + y * y);
     }
 
     /**
-     * Calculate the mid point of the first two fingers
+     * Calculate the min distance of two pointers
      */
     public static void midPoint(PointF point, MotionEvent event) {
         float x = event.getX(0) + event.getX(1) + event.getX(2);
         float y = event.getY(0) + event.getY(1) + event.getY(2);
         point.set(x / 3, y / 3);
+    }
+
+    public static int calcFingerFlag(MotionEvent event) {
+        float space1 = calcSpacing(event, 0, 1);
+        float space2 = calcSpacing(event, 0, 2);
+        float space3 = calcSpacing(event, 2, 1);
+        float minSpace = Math.min(space1, Math.min(space2, space3));
+        if (minSpace == space1) {
+            return FINGER_FLAG_1;
+        } else if (minSpace == space2) {
+            return FINGER_FLAG_2;
+        } else if (minSpace == space3) {
+            return FINGER_FLAG_3;
+        } else {
+            return -1;
+        }
     }
 
     /**

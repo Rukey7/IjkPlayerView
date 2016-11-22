@@ -1078,6 +1078,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         private int mode = NORMAL;
         private PointF midPoint = new PointF(0, 0);
         private float degree = 0;
+        private int fingerFlag = INVALID_VALUE;
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -1091,14 +1092,12 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     if (event.getPointerCount() == 3) {
                         mode = ZOOM_AND_ROTATE;
                         MotionEventUtils.midPoint(midPoint, event);
+                        fingerFlag = MotionEventUtils.calcFingerFlag(event);
                         degree = MotionEventUtils.rotation(event, midPoint);
                     } else {
                         mode = INVALID_POINTER;
                     }
                     Log.i("TTAG", "getPointerCount " + event.getPointerCount());
-//                    Log.i("TTAG", "calcSpacing " + MotionEventUtils.calcSpacing(event));
-//                    Log.i("TTAG", "rotation " + MotionEventUtils.rotation(event));
-//                    Log.i("TTAG", "midPoint " + midPoint.toString());
                     break;
 
                 case MotionEvent.ACTION_MOVE:
@@ -1110,14 +1109,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     break;
 
                 case MotionEvent.ACTION_POINTER_UP:
-//                    if (event.getPointerCount() == 4) {
-//                        mode = ZOOM_AND_ROTATE;
-//                    } else {
-//                        mode = INVALID_POINTER;
-//                    }
                     mode = INVALID_POINTER;
                     Log.d("TTAG", "getPointerCount " + event.getPointerCount());
-//                    mode = NORMAL;
                     break;
             }
             if (mode == NORMAL) {
