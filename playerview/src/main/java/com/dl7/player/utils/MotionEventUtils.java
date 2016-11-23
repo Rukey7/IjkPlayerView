@@ -27,6 +27,12 @@ public final class MotionEventUtils {
         return (float) Math.sqrt(x * x + y * y);
     }
 
+    /**
+     * Determine the space between the two fingers
+     * @param event
+     * @param fingerFlag
+     * @return
+     */
     public static float calcSpacing(MotionEvent event, int fingerFlag) {
         float x, y;
         if (FINGER_FLAG_1 == fingerFlag) {
@@ -46,7 +52,7 @@ public final class MotionEventUtils {
     }
 
     /**
-     * Calculate the min distance of two pointers
+     * Calculate the mid point of two pointers
      */
     public static void midPoint(PointF point, MotionEvent event) {
         float x = event.getX(0) + event.getX(1) + event.getX(2);
@@ -54,6 +60,11 @@ public final class MotionEventUtils {
         point.set(x / 3, y / 3);
     }
 
+    /**
+     * 计算靠的最近的两指
+     * @param event
+     * @return
+     */
     public static int calcFingerFlag(MotionEvent event) {
         float space1 = calcSpacing(event, 0, 1);
         float space2 = calcSpacing(event, 0, 2);
@@ -94,21 +105,4 @@ public final class MotionEventUtils {
         double radians = Math.atan2(delta_y, delta_x);
         return (float) Math.toDegrees(radians);
     }
-//    public static float rotation(MotionEvent event, PointF midPoint) {
-//        double deltaX1 = event.getX(0) - midPoint.x;
-//        double deltaX2 = event.getX(1) - midPoint.x;
-//        double deltaX3 = event.getX(2) - midPoint.x;
-//        double deltaY1 = event.getY(0) - midPoint.y;
-//        double deltaY2 = event.getY(1) - midPoint.y;
-//        double deltaY3 = event.getY(2) - midPoint.y;
-//
-//        double radians1 = Math.atan2(deltaY1, deltaX1);
-//        double radians2 = Math.atan2(deltaY2, deltaX2);
-//        double radians3 = Math.atan2(deltaY3, deltaX3);
-//        float degree1 = (float) Math.toDegrees(radians1);
-//        float degree2 = (float) Math.toDegrees(radians2);
-//        float degree3 = (float) Math.toDegrees(radians3);
-//        Log.e("TTAG", degree1 + " - " + degree2 + " - " + degree3);
-//        return (float) Math.toDegrees(degree1 + degree2 + degree3);
-//    }
 }

@@ -104,6 +104,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private IRenderView mRenderView;
     private int mVideoSarNum;
     private int mVideoSarDen;
+    // add，视频缩放比例
+    private float mVideoScale = 1.0f;
 
 
     private long mPrepareStartTime = 0;
@@ -195,32 +197,48 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         mRenderView.setVideoRotation(mVideoRotationDegree);
     }
 
+    /**
+     * add，设置旋转角度
+     * @param degree
+     */
     public void setVideoRotation(int degree) {
         mVideoTargetRotationDegree = mVideoRotationDegree + degree;
         mRenderView.setVideoRotation(mVideoTargetRotationDegree);
     }
 
+    /**
+     * add，获取视频 Matrix
+     * @return
+     */
     public Matrix getVideoTransform() {
         if (mOriginalMatrix == null) {
             mOriginalMatrix = mRenderView.getTransform();
-            RectF rectF = new RectF();
-            mOriginalMatrix.mapRect(rectF);
-            Log.e("TTAG", rectF.centerX() + " - "+ rectF.centerY());
-            Log.w("TTAG", rectF.toString());
         }
         return mRenderView.getTransform();
     }
 
+    /**
+     * 设置视频 Matrix
+     * @param transform
+     */
     public void setVideoTransform(Matrix transform) {
-//        transform.preTranslate(-mVideoWidth / 2, -mVideoHeight / 2);
-//        transform.postTranslate(mVideoWidth / 2, mVideoHeight / 2);
         mRenderView.setTransform(transform);
     }
 
-    private float mVideoScale = 1.0f;
-
-    public void adjustVideoView(float scale) {
+    /**
+     * 调整视频界面，居中显示
+     * @param scale 本次缩放比例
+     * @return true则做了变换，false则没变化
+     */
+    public boolean adjustVideoView(float scale) {
+        // 计算当前缩放比例
+        mVideoScale *= scale;
+        // 计算旋转角度
         final int degree = (mVideoTargetRotationDegree + 360) % 360;
+        if (mVideoScale == 1.0f && degree == 0) {
+            return false;
+        }
+
         if (degree > 315 || degree <= 45) {
             mVideoRotationDegree = 0;
         } else if (degree > 45 && degree <= 135) {
@@ -235,22 +253,24 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         mRenderView.setVideoRotation(mVideoRotationDegree);
         mVideoTargetRotationDegree = 0;
 
-        mVideoScale *= scale;
-        int width = (int) (mRenderView.getView().getWidth() * mVideoScale);
-        int height = (int) (mRenderView.getView().getHeight() * mVideoScale);
+        // 移动居中显示
         Matrix matrix = getVideoTransform();
         RectF rectF = new RectF();
         matrix.mapRect(rectF);
         matrix.postTranslate(mRenderView.getView().getWidth() * (1 - mVideoScale) / 2 - rectF.centerX(),
                 mRenderView.getView().getHeight() * (1 - mVideoScale) / 2 -rectF.centerY());
         mRenderView.setTransform(matrix);
-        Log.d("TTAG", mRenderView.getView().getWidth() + " - " +  mRenderView.getView().getHeight());
+        return true;
     }
 
+    /**
+     * 还原界面
+     */
     public void resetVideoView() {
         mRenderView.setTransform(mOriginalMatrix);
         mRenderView.setVideoRotation(mVideoRotationDegree);
         mVideoTargetRotationDegree = 0;
+        mVideoScale = 1.0f;
     }
 
     /**

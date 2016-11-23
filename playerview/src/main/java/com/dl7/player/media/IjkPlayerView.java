@@ -10,7 +10,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PointF;
-import android.graphics.RectF;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.BatteryManager;
@@ -1075,15 +1074,21 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 触摸监听
      */
     private OnTouchListener mPlayerTouchListener = new OnTouchListener() {
+        // 触摸模式：正常、无效、缩放旋转
         private static final int NORMAL = 1;
         private static final int INVALID_POINTER = 2;
         private static final int ZOOM_AND_ROTATE = 3;
-
+        // 触摸模式
         private int mode = NORMAL;
+        // 缩放的中点
         private PointF midPoint = new PointF(0, 0);
+        // 旋转角度
         private float degree = 0;
+        // 用来标识哪两个手指靠得最近，我的做法是取最近的两指中点和余下一指来控制旋转缩放
         private int fingerFlag = INVALID_VALUE;
+        // 初始间距
         private float oldDist;
+        // 缩放比例
         private float scale;
 
         @Override
@@ -1096,11 +1101,14 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
                 case MotionEvent.ACTION_POINTER_DOWN:
                     if (event.getPointerCount() == 3) {
+                        _hideTouchView();
+                        // 进入三指旋转缩放模式，进行相关初始化
                         mode = ZOOM_AND_ROTATE;
                         MotionEventUtils.midPoint(midPoint, event);
                         fingerFlag = MotionEventUtils.calcFingerFlag(event);
                         degree = MotionEventUtils.rotation(event, fingerFlag);
                         oldDist = MotionEventUtils.calcSpacing(event, fingerFlag);
+                        // 获取视频的 Matrix
                         saveMatrix = mVideoView.getVideoTransform();
                     } else {
                         mode = INVALID_POINTER;
@@ -1109,8 +1117,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
                 case MotionEvent.ACTION_MOVE:
                     if (mode == ZOOM_AND_ROTATE) {
+                        // 处理旋转
                         float newRotate = MotionEventUtils.rotation(event, fingerFlag);
                         mVideoView.setVideoRotation((int) (newRotate - degree));
+                        // 处理缩放
                         matrix.set(saveMatrix);
                         float newDist = MotionEventUtils.calcSpacing(event, fingerFlag);
                         scale = newDist / oldDist;
@@ -1121,23 +1131,20 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
                 case MotionEvent.ACTION_POINTER_UP:
                     if (mode == ZOOM_AND_ROTATE) {
+                        // 调整视频界面，让界面居中显示在屏幕
                         mVideoView.adjustVideoView(scale);
-                        RectF rectF = new RectF();
-                        matrix.mapRect(rectF);
                     }
                     mode = INVALID_POINTER;
                     break;
             }
+            // 触屏手势处理
             if (mode == NORMAL) {
                 if (mGestureDetector.onTouchEvent(event)) {
                     return true;
                 }
-            }
-//            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
-//                mHandler.removeCallbacks(mHideBarRunnable);
-//            }
-            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_UP && mode == NORMAL) {
-                _endGesture();
+                if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_UP) {
+                    _endGesture();
+                }
             }
             return false;
         }
