@@ -147,6 +147,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private FrameLayout mFlVideoBox;
     // 锁屏键
     private ImageView mIvPlayerLock;
+    // 还原屏幕
+    private TextView mTvRecoverScreen;
     // 关联的Activity
     private AppCompatActivity mAttachActivity;
 
@@ -207,8 +209,11 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private boolean mIsAlwaysFullScreen = false;
     // 记录按退出全屏时间
     private long mExitTime = 0;
-    private Matrix matrix = new Matrix();
-    private Matrix saveMatrix = new Matrix();
+    // 视频Matrix
+    private Matrix mVideoMatrix = new Matrix();
+    private Matrix mSaveMatrix = new Matrix();
+    // 是否需要显示恢复屏幕按钮
+    private boolean mIsNeedRecoverScreen = false;
 
 
     public IjkPlayerView(Context context) {
@@ -248,6 +253,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mFlVideoBox = (FrameLayout) findViewById(R.id.fl_video_box);
         mIvPlayerLock = (ImageView) findViewById(R.id.iv_player_lock);
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
+        mTvRecoverScreen = (TextView) findViewById(R.id.tv_recover_screen);
         _initMediaQuality();
         _initVideoSkip();
         _initReceiver();
@@ -258,6 +264,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mIvBackWindow.setOnClickListener(this);
         mIvPlayerLock.setOnClickListener(this);
         mIvPlayCircle.setOnClickListener(this);
+        mTvRecoverScreen.setOnClickListener(this);
     }
 
     /**
@@ -612,6 +619,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         if (mIsEnableDanmaku) {
             mDanmakuPlayerSeek.setVisibility(GONE);
         }
+        if (mIsNeedRecoverScreen) {
+            mTvRecoverScreen.setVisibility(GONE);
+        }
     }
 
     /**
@@ -636,6 +646,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 if (mIsEnableDanmaku) {
                     mDanmakuPlayerSeek.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
                 }
+                if (mIsNeedRecoverScreen) {
+                    mTvRecoverScreen.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
+                }
             } else {
                 mWindowTopBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
                 mFullscreenTopBar.setVisibility(View.GONE);
@@ -643,9 +656,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 if (mIsEnableDanmaku) {
                     mDanmakuPlayerSeek.setVisibility(GONE);
                 }
-            }
-            if (mIsAlwaysFullScreen) {
-
+                if (mIsNeedRecoverScreen) {
+                    mTvRecoverScreen.setVisibility(View.GONE);
+                }
             }
         }
     }
@@ -720,6 +733,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             if (mIsEnableDanmaku) {
                 mDanmakuPlayerSeek.setVisibility(VISIBLE);
             }
+            if (mIsNeedRecoverScreen) {
+                mTvRecoverScreen.setVisibility(VISIBLE);
+            }
         }
     }
 
@@ -788,6 +804,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             _toggleMoreColorOptions();
         } else if (id == R.id.iv_screenshot) {
             _doScreenshot();
+        } else if (id == R.id.tv_recover_screen) {
+            mVideoView.resetVideoView(true);
+            mIsNeedRecoverScreen = false;
+            mTvRecoverScreen.setVisibility(GONE);
         }
     }
 
@@ -830,6 +850,16 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mLlBottomBar.setBackgroundResource(isFullscreen ? R.color.bg_video_view : android.R.color.transparent);
         if (mIsShowQuality && !isFullscreen) {
             _toggleMediaQuality();
+        }
+        // 处理三指旋转缩放，如果之前进行了相关操作则全屏时还原之前旋转缩放的状态，窗口模式则将整个屏幕还原为未操作状态
+        if (mIsNeedRecoverScreen) {
+            if (isFullscreen) {
+                mVideoView.adjustVideoView(1.0f);
+                mTvRecoverScreen.setVisibility(mIsShowBar ? View.VISIBLE : View.GONE);
+            } else {
+                mVideoView.resetVideoView(false);
+                mTvRecoverScreen.setVisibility(GONE);
+            }
         }
     }
 
@@ -1109,7 +1139,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                         degree = MotionEventUtils.rotation(event, fingerFlag);
                         oldDist = MotionEventUtils.calcSpacing(event, fingerFlag);
                         // 获取视频的 Matrix
-                        saveMatrix = mVideoView.getVideoTransform();
+                        mSaveMatrix = mVideoView.getVideoTransform();
                     } else {
                         mode = INVALID_POINTER;
                     }
@@ -1121,18 +1151,18 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                         float newRotate = MotionEventUtils.rotation(event, fingerFlag);
                         mVideoView.setVideoRotation((int) (newRotate - degree));
                         // 处理缩放
-                        matrix.set(saveMatrix);
+                        mVideoMatrix.set(mSaveMatrix);
                         float newDist = MotionEventUtils.calcSpacing(event, fingerFlag);
                         scale = newDist / oldDist;
-                        matrix.postScale(scale, scale, midPoint.x, midPoint.y);
-                        mVideoView.setVideoTransform(matrix);
+                        mVideoMatrix.postScale(scale, scale, midPoint.x, midPoint.y);
+                        mVideoView.setVideoTransform(mVideoMatrix);
                     }
                     break;
 
                 case MotionEvent.ACTION_POINTER_UP:
                     if (mode == ZOOM_AND_ROTATE) {
                         // 调整视频界面，让界面居中显示在屏幕
-                        mVideoView.adjustVideoView(scale);
+                        mIsNeedRecoverScreen = mVideoView.adjustVideoView(scale);
                     }
                     mode = INVALID_POINTER;
                     break;

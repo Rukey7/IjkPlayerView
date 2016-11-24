@@ -16,11 +16,11 @@
 
 package com.dl7.player.media;
 
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.graphics.RectF;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -106,6 +106,11 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private int mVideoSarDen;
     // add，视频缩放比例
     private float mVideoScale = 1.0f;
+    // add,是否为视频正常显示状态
+    private boolean mIsNormalScreen = true;
+    // add,保存全屏状态下的屏幕宽高
+    private int mScreenOrWidth;
+    private int mScreenOrHeight;
 
 
     private long mPrepareStartTime = 0;
@@ -161,6 +166,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     /**
      * 设置渲染视图
+     *
      * @param renderView
      */
     public void setRenderView(IRenderView renderView) {
@@ -199,6 +205,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     /**
      * add，设置旋转角度
+     *
      * @param degree
      */
     public void setVideoRotation(int degree) {
@@ -208,6 +215,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     /**
      * add，获取视频 Matrix
+     *
      * @return
      */
     public Matrix getVideoTransform() {
@@ -219,6 +227,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     /**
      * 设置视频 Matrix
+     *
      * @param transform
      */
     public void setVideoTransform(Matrix transform) {
@@ -227,6 +236,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     /**
      * 调整视频界面，居中显示
+     *
      * @param scale 本次缩放比例
      * @return true则做了变换，false则没变化
      */
@@ -250,27 +260,61 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         } else {
             mVideoRotationDegree = 0;
         }
-        mRenderView.setVideoRotation(mVideoRotationDegree);
-        mVideoTargetRotationDegree = 0;
+//        mRenderView.setVideoRotation(mVideoRotationDegree);
+        final int deltaDegree = mVideoRotationDegree - mVideoTargetRotationDegree;
+        mVideoTargetRotationDegree = mVideoRotationDegree;
 
-        // 移动居中显示
-        Matrix matrix = getVideoTransform();
-        RectF rectF = new RectF();
-        matrix.mapRect(rectF);
-        matrix.postTranslate(mRenderView.getView().getWidth() * (1 - mVideoScale) / 2 - rectF.centerX(),
-                mRenderView.getView().getHeight() * (1 - mVideoScale) / 2 -rectF.centerY());
-        mRenderView.setTransform(matrix);
+        final Matrix matrix = getVideoTransform();
+        if (mScreenOrWidth == 0 || mScreenOrHeight == 0) {
+            mScreenOrWidth = mRenderView.getView().getWidth();
+            mScreenOrHeight = mRenderView.getView().getHeight();
+        }
+        if (!mIsNormalScreen) {
+            // 还原之前旋转缩放状态
+            matrix.preScale(mVideoScale, mVideoScale);
+            matrix.postTranslate(mScreenOrWidth * (1 - mVideoScale) / 2,
+                    mScreenOrHeight * (1 - mVideoScale) / 2);
+            mRenderView.setTransform(matrix);
+            mIsNormalScreen = true;
+        } else {
+            // 移动居中显示
+            float[] points = new float[2];
+            // 获取视频左上角离屏幕左上角的位移
+            matrix.mapPoints(points);
+            final float deltaX = mScreenOrWidth * (1 - mVideoScale) / 2 - points[0];
+            final float deltaY = mScreenOrHeight * (1 - mVideoScale) / 2 - points[1];
+            matrix.postTranslate(mScreenOrWidth * (1 - mVideoScale) / 2 - points[0],
+                    mScreenOrHeight * (1 - mVideoScale) / 2 - points[1]);
+            mRenderView.setTransform(matrix);
+            ValueAnimator animator = ValueAnimator.ofFloat(0, 1.0f).setDuration(500);
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                    float percent = (float) valueAnimator.getAnimatedValue();
+//                    matrix.setTranslate(deltaX * percent, deltaY * percent);
+//                    mRenderView.setTransform(matrix);
+                    mRenderView.setVideoRotation((int) (mVideoRotationDegree - deltaDegree * (1 - percent)));
+                }
+            });
+            animator.start();
+        }
         return true;
     }
 
     /**
      * 还原界面
+     *
+     * @param isForever 是否永久还原
      */
-    public void resetVideoView() {
+    public void resetVideoView(boolean isForever) {
+        mIsNormalScreen = isForever;
+        mVideoRotationDegree = 0;
+        if (isForever) {
+            mVideoTargetRotationDegree = 0;
+            mVideoScale = 1.0f;
+        }
         mRenderView.setTransform(mOriginalMatrix);
         mRenderView.setVideoRotation(mVideoRotationDegree);
-        mVideoTargetRotationDegree = 0;
-        mVideoScale = 1.0f;
     }
 
     /**
@@ -348,6 +392,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     /**
      * 截图
+     *
      * @return
      */
     public Bitmap getScreenshot() {
