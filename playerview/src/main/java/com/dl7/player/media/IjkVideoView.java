@@ -111,6 +111,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     // add,保存全屏状态下的屏幕宽高
     private int mScreenOrWidth;
     private int mScreenOrHeight;
+    // add,保存的临时Matrix
+    private Matrix mSaveMatrix;
 
 
     private long mPrepareStartTime = 0;
@@ -283,16 +285,21 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             matrix.mapPoints(points);
             final float deltaX = mScreenOrWidth * (1 - mVideoScale) / 2 - points[0];
             final float deltaY = mScreenOrHeight * (1 - mVideoScale) / 2 - points[1];
-            matrix.postTranslate(mScreenOrWidth * (1 - mVideoScale) / 2 - points[0],
-                    mScreenOrHeight * (1 - mVideoScale) / 2 - points[1]);
-            mRenderView.setTransform(matrix);
-            ValueAnimator animator = ValueAnimator.ofFloat(0, 1.0f).setDuration(500);
+//            matrix.postTranslate(mScreenOrWidth * (1 - mVideoScale) / 2 - points[0],
+//                    mScreenOrHeight * (1 - mVideoScale) / 2 - points[1]);
+//            mRenderView.setTransform(matrix);
+            if (mSaveMatrix == null) {
+                mSaveMatrix = new Matrix();
+            }
+            // 使用动画慢慢居中
+            ValueAnimator animator = ValueAnimator.ofFloat(0, 1.0f).setDuration(300);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator valueAnimator) {
                     float percent = (float) valueAnimator.getAnimatedValue();
-//                    matrix.setTranslate(deltaX * percent, deltaY * percent);
-//                    mRenderView.setTransform(matrix);
+                    mSaveMatrix.set(matrix);
+                    mSaveMatrix.postTranslate(deltaX * percent, deltaY * percent);
+                    mRenderView.setTransform(mSaveMatrix);
                     mRenderView.setVideoRotation((int) (mVideoRotationDegree - deltaDegree * (1 - percent)));
                 }
             });
