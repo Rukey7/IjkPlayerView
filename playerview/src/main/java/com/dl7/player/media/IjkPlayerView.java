@@ -510,8 +510,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 暂停
      */
     public void pause() {
+        mIvPlay.setSelected(false);
         if (mVideoView.isPlaying()) {
-            mIvPlay.setSelected(false);
             mVideoView.pause();
         }
         _pauseDanmaku();
@@ -536,6 +536,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 停止
      */
     public void stop() {
+        pause();
         mVideoView.stopPlayback();
     }
 
@@ -1457,6 +1458,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 //                mVideoView.release(false);
 //                mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
 //                setVideoPath(mVideoView.getUri());
+                break;
+
+            case MediaPlayerParams.STATE_COMPLETED:
+                pause();
                 break;
         }
     }
