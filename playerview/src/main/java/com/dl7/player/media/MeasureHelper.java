@@ -90,8 +90,8 @@ public final class MeasureHelper {
             int widthSpecSize = View.MeasureSpec.getSize(widthMeasureSpec);
             int heightSpecMode = View.MeasureSpec.getMode(heightMeasureSpec);
             int heightSpecSize = View.MeasureSpec.getSize(heightMeasureSpec);
-
-            if (widthSpecMode == View.MeasureSpec.AT_MOST && heightSpecMode == View.MeasureSpec.AT_MOST) {
+            // modify，把&&操作符换为||
+            if (widthSpecMode == View.MeasureSpec.AT_MOST || heightSpecMode == View.MeasureSpec.AT_MOST) {
                 // 测量宽高比，对应的视图的宽高比
                 float specAspectRatio = (float) widthSpecSize / (float) heightSpecSize;
                 // 显示宽高比，要显示的视频宽高比

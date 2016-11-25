@@ -103,7 +103,7 @@
             android:layout_weight="1"
             android:background="@drawable/shape_send_danmaku_bg"
             android:gravity="center"
-            android:padding="10dp"
+            android:padding="7dp"
             android:text="发射弹幕"
             android:textColor="@android:color/white"
             android:textSize="16sp"

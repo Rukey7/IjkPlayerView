@@ -149,6 +149,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private ImageView mIvPlayerLock;
     // 还原屏幕
     private TextView mTvRecoverScreen;
+    // 宽高比选项
+    private TextView mTvSettings;
+    private RadioGroup mAspectRatioOptions;
     // 关联的Activity
     private AppCompatActivity mAttachActivity;
 
@@ -214,6 +217,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private Matrix mSaveMatrix = new Matrix();
     // 是否需要显示恢复屏幕按钮
     private boolean mIsNeedRecoverScreen = false;
+    private int mAspectOptionsHeight;
 
 
     public IjkPlayerView(Context context) {
@@ -254,6 +258,25 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mIvPlayerLock = (ImageView) findViewById(R.id.iv_player_lock);
         mIvPlayCircle = (ImageView) findViewById(R.id.iv_play_circle);
         mTvRecoverScreen = (TextView) findViewById(R.id.tv_recover_screen);
+        // 视频宽高比设置
+        mTvSettings = (TextView) findViewById(R.id.tv_settings);
+        mAspectRatioOptions = (RadioGroup) findViewById(R.id.aspect_ratio_group);
+        mAspectOptionsHeight = getResources().getDimensionPixelSize(R.dimen.aspect_btn_size) * 4;
+        mAspectRatioOptions.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.aspect_fit_parent) {
+                    mVideoView.setAspectRatio(IRenderView.AR_ASPECT_FIT_PARENT);
+                } else if (checkedId == R.id.aspect_fit_screen) {
+                    mVideoView.setAspectRatio(IRenderView.AR_ASPECT_FILL_PARENT);
+                } else if (checkedId == R.id.aspect_16_and_9) {
+                    mVideoView.setAspectRatio(IRenderView.AR_16_9_FIT_PARENT);
+                } else if (checkedId == R.id.aspect_4_and_3) {
+                    mVideoView.setAspectRatio(IRenderView.AR_4_3_FIT_PARENT);
+                }
+                _hideAllView(false);
+            }
+        });
         _initMediaQuality();
         _initVideoSkip();
         _initReceiver();
@@ -265,6 +288,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mIvPlayerLock.setOnClickListener(this);
         mIvPlayCircle.setOnClickListener(this);
         mTvRecoverScreen.setOnClickListener(this);
+        mTvSettings.setOnClickListener(this);
     }
 
     /**
@@ -601,7 +625,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         @Override
         public void run() {
             _hideAllView(false);
-            mIsShowBar = false;
         }
     };
 
@@ -614,8 +637,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mFullscreenTopBar.setVisibility(View.GONE);
         mWindowTopBar.setVisibility(View.GONE);
         mLlBottomBar.setVisibility(View.GONE);
+        _showAspectRatioOptions(false);
         if (!isTouchLock) {
             mIvPlayerLock.setVisibility(View.GONE);
+            mIsShowBar = false;
         }
         if (mIsEnableDanmaku) {
             mDanmakuPlayerSeek.setVisibility(GONE);
@@ -637,6 +662,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mIvPlayerLock.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
         } else {
             mLlBottomBar.setVisibility(isShowBar ? View.VISIBLE : View.GONE);
+            if (!isShowBar) {
+                _showAspectRatioOptions(false);
+            }
             // 全屏切换显示的控制栏不一样
             if (mIsFullscreen) {
                 // 只在显示控制栏的时候才设置时间，因为控制栏通常不显示且单位为分钟，所以不做实时更新
@@ -756,6 +784,19 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         }
     }
 
+    /**
+     * 显示宽高比设置
+     * @param isShow
+     */
+    private void _showAspectRatioOptions(boolean isShow) {
+        if (isShow) {
+            AnimHelper.doClipViewHeight(mAspectRatioOptions, 0, mAspectOptionsHeight, 150);
+        } else {
+            ViewGroup.LayoutParams layoutParams = mAspectRatioOptions.getLayoutParams();
+            layoutParams.height = 0;
+        }
+    }
+
     @Override
     public void onClick(View v) {
         _refreshHideRunnable();
@@ -809,6 +850,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mVideoView.resetVideoView(true);
             mIsNeedRecoverScreen = false;
             mTvRecoverScreen.setVisibility(GONE);
+        } else if (id == R.id.tv_settings) {
+            _showAspectRatioOptions(true);
         }
     }
 
@@ -861,6 +904,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 mVideoView.resetVideoView(false);
                 mTvRecoverScreen.setVisibility(GONE);
             }
+        }
+        // 非全屏隐藏宽高比设置
+        if (!isFullscreen) {
+            _showAspectRatioOptions(false);
         }
     }
 
@@ -1403,6 +1450,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     // 这个用来控制弹幕启动和视频同步
     private boolean mIsRenderingStart = false;
+    // 缓冲开始，这个用来控制弹幕启动和视频同步
+    private boolean mIsBufferingStart = false;
 
     // 视频播放状态监听
     private OnInfoListener mInfoListener = new OnInfoListener() {
@@ -1425,6 +1474,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         Log.e("TTAG", "status " + status);
         switch (status) {
             case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
+                mIsBufferingStart = true;
                 _pauseDanmaku();
                 if (!mIsNeverPlay) {
                     mLoadingView.setVisibility(View.VISIBLE);
@@ -1435,6 +1485,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             case IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:
                 mIsRenderingStart = true;
             case IMediaPlayer.MEDIA_INFO_BUFFERING_END:
+                mIsBufferingStart = false;
                 mLoadingView.setVisibility(View.GONE);
                 mPlayerThumb.setVisibility(View.GONE);
                 // 更新进度
@@ -1448,7 +1499,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 break;
 
             case MediaPlayerParams.STATE_PLAYING:
-                if (mIsRenderingStart) {
+                if (mIsRenderingStart && !mIsBufferingStart) {
                     _resumeDanmaku();   // 开启弹幕
                 }
                 break;
@@ -2005,7 +2056,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mVideoStatus = INTERRUPT_WHEN_PAUSE;
         }
         _hideAllView(false);
-        mIsShowBar = false;
     }
 
     /**

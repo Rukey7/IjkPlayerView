@@ -56,4 +56,25 @@ public final class AnimHelper {
         valueAnimator.start();
     }
 
+    /**
+     * 裁剪视图宽度
+     * @param view
+     * @param srcHeight
+     * @param endHeight
+     * @param duration
+     */
+    public static void doClipViewHeight(final View view, int srcHeight, int endHeight, int duration) {
+        ValueAnimator valueAnimator = ValueAnimator.ofInt(srcHeight, endHeight).setDuration(duration);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                int width = (int) valueAnimator.getAnimatedValue();
+                ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+                layoutParams.height = width;
+                view.setLayoutParams(layoutParams);
+            }
+        });
+        valueAnimator.setInterpolator(new AccelerateInterpolator());
+        valueAnimator.start();
+    }
 }

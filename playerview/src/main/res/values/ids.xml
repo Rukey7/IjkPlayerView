@@ -25,4 +25,6 @@
     <item type="id" name="input_options_color_purple">false</item>
     <item type="id" name="input_options_color_lite_blue">false</item>
     <item type="id" name="input_options_color_brown">false</item>
+
+    <item type="id" name="aspect_fit_parent">false</item>
 </resources>

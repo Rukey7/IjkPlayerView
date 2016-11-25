@@ -17,7 +17,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
 //    private static final String VIDEO_URL = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4";
 //    private static final String VIDEO_URL_HD = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f30.mp4";
     private static final String VIDEO_URL = "http://baobab.wdjcdn.com/14564977406580.mp4";
-    private static final String VIDEO_URL_HD = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4";
+    private static final String VIDEO_URL_HD = "http://183.6.245.249/v.cctv.com/flash/mp4video6/TMS/2011/01/05/cf752b1c12ce452b3040cab2f90bc265_h264818000nero_aac32-1.mp4";
     private static final String IMAGE_URL = "http://i2.hdslb.com/video/46/46f6bb84ffdfedaa1973b5595322178d.jpg";
     Toolbar mToolbar;
     private IjkPlayerView mPlayerView;

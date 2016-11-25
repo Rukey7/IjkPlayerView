@@ -7,4 +7,8 @@
     <dimen name="danmaku_input_options_color_radio_btn_height">25.0dip</dimen>
     <dimen name="danmaku_input_options_color_radio_btn_margin">5.0dip</dimen>
     <dimen name="danmaku_input_options_color_radio_btn_size">42.0dip</dimen>
+
+    <dimen name="settings_btn_width">44dp</dimen>
+    <dimen name="aspect_btn_height">20dp</dimen>
+    <dimen name="aspect_btn_size">30dp</dimen>
 </resources>
