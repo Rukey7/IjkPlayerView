@@ -10,12 +10,12 @@
         android:layout_gravity="center_horizontal|bottom"
         android:layout_marginBottom="70dp"
         android:background="@drawable/shape_video_bg"
-        android:paddingBottom="5dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="5dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
         android:visibility="gone"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:text="还原屏幕"
         android:textColor="@color/video_skip"/>
 

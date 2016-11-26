@@ -274,7 +274,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 } else if (checkedId == R.id.aspect_4_and_3) {
                     mVideoView.setAspectRatio(IRenderView.AR_4_3_FIT_PARENT);
                 }
-                _hideAllView(false);
+                AnimHelper.doClipViewHeight(mAspectRatioOptions, mAspectOptionsHeight, 0, 150);
+//                _hideAllView(false);
             }
         });
         _initMediaQuality();
@@ -525,6 +526,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mIvPlayCircle.setVisibility(GONE);
             mLoadingView.setVisibility(VISIBLE);
             mIsShowBar = false;
+            // 放这边装载弹幕，不然会莫名其妙出现多切几次到首页会弹幕自动播放问题，这里处理下
+            _loadDanmaku();
         }
         // 视频播放时开启屏幕常亮
         mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -1178,7 +1181,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     break;
 
                 case MotionEvent.ACTION_POINTER_DOWN:
-                    if (event.getPointerCount() == 3) {
+                    if (event.getPointerCount() == 3 && mIsFullscreen) {
                         _hideTouchView();
                         // 进入三指旋转缩放模式，进行相关初始化
                         mode = ZOOM_AND_ROTATE;
@@ -1211,6 +1214,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     if (mode == ZOOM_AND_ROTATE) {
                         // 调整视频界面，让界面居中显示在屏幕
                         mIsNeedRecoverScreen = mVideoView.adjustVideoView(scale);
+                        if (mIsNeedRecoverScreen && mIsShowBar) {
+                            mTvRecoverScreen.setVisibility(VISIBLE);
+                        }
                     }
                     mode = INVALID_POINTER;
                     break;
@@ -1940,18 +1946,29 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 mDanmakuCurColor.setBackgroundColor(mDanmakuTextColor);
             }
         });
+    }
 
-        // 设置弹幕
-        mDanmakuContext = DanmakuContext.create();
-        if (mDanmakuView != null) {
-            mParser = new BaseDanmakuParser() {
-                @Override
-                protected Danmakus parse() {
-                    return new Danmakus();
-                }
-            };
+    /**
+     * 装载弹幕，在视频按了播放键才装载
+     */
+    private void _loadDanmaku() {
+        if (mIsEnableDanmaku) {
+            // 设置弹幕
+            mDanmakuContext = DanmakuContext.create();
+            if (mParser == null) {
+                mParser = new BaseDanmakuParser() {
+                    @Override
+                    protected Danmakus parse() {
+                        return new Danmakus();
+                    }
+                };
+            }
             mDanmakuView.enableDanmakuDrawingCache(true);
             mDanmakuView.prepare(mParser, mDanmakuContext);
+//            if (mDanmakuView != null) {
+//                mDanmakuView.enableDanmakuDrawingCache(true);
+//                mDanmakuView.prepare(mParser, mDanmakuContext);
+//            }
         }
     }
 
@@ -1991,7 +2008,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mParser = new BiliDanmukuParser();
         IDataSource<?> dataSource = loader.getDataSource();
         mParser.load(dataSource);
-        mDanmakuView.prepare(mParser, mDanmakuContext);
+//        mDanmakuView.prepare(mParser, mDanmakuContext);
         return this;
     }
 
@@ -2081,6 +2098,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 激活弹幕
      */
     private void _resumeDanmaku() {
+        Log.e("TTAG", "_resumeDanmaku");
         if (mDanmakuView != null && mDanmakuView.isPrepared() && mDanmakuView.isPaused()) {
             mDanmakuView.resume();
         }
