@@ -184,6 +184,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private boolean mIsShowBar = true;
     // 是否全屏
     private boolean mIsFullscreen;
+    // 是否播放结束
+    private boolean mIsPlayComplete = false;
     // 是否正在拖拽进度条
     private boolean mIsSeeking;
     // 目标进度
@@ -217,6 +219,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private Matrix mSaveMatrix = new Matrix();
     // 是否需要显示恢复屏幕按钮
     private boolean mIsNeedRecoverScreen = false;
+    // 选项列表高度
     private int mAspectOptionsHeight;
 
 
@@ -275,7 +278,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     mVideoView.setAspectRatio(IRenderView.AR_4_3_FIT_PARENT);
                 }
                 AnimHelper.doClipViewHeight(mAspectRatioOptions, mAspectOptionsHeight, 0, 150);
-//                _hideAllView(false);
             }
         });
         _initMediaQuality();
@@ -515,6 +517,13 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * @return
      */
     public void start() {
+        if (mIsPlayComplete) {
+            if (mDanmakuView != null && mDanmakuView.isPrepared()) {
+                mDanmakuView.seekTo((long) 0);
+                mDanmakuView.pause();
+            }
+            mIsPlayComplete = false;
+        }
         if (!mVideoView.isPlaying()) {
             mIvPlay.setSelected(true);
             mVideoView.start();
@@ -553,10 +562,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      */
     public void seekTo(int position) {
         mVideoView.seekTo(position);
-        if (mDanmakuView != null && mDanmakuView.isPrepared()) {
-            mDanmakuView.seekTo((long) position);
-            mDanmakuView.pause();
-        }
+        mDanmakuTargetPosition = position;
     }
 
     /**
@@ -829,7 +835,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mLoadingView.setVisibility(VISIBLE);
             // 视频跳转
             seekTo(mSkipPosition);
-            mDanmakuView.seekTo((long) mSkipPosition);
             mHandler.removeCallbacks(mHideSkipTipRunnable);
             _hideSkipTip();
             _setProgress();
@@ -1519,6 +1524,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
             case MediaPlayerParams.STATE_COMPLETED:
                 pause();
+                mIsPlayComplete = true;
                 break;
         }
     }
@@ -1875,6 +1881,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private int mBasicOptionsWidth = INVALID_VALUE;
     // 弹幕更多颜色设置布局宽度
     private int mMoreOptionsWidth = INVALID_VALUE;
+    // 弹幕要跳转的目标位置，等视频播放再跳转，不然老出现只有弹幕在动的情况
+    private long mDanmakuTargetPosition = INVALID_VALUE;
 
     /**
      * 弹幕初始化
@@ -1965,10 +1973,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             }
             mDanmakuView.enableDanmakuDrawingCache(true);
             mDanmakuView.prepare(mParser, mDanmakuContext);
-//            if (mDanmakuView != null) {
-//                mDanmakuView.enableDanmakuDrawingCache(true);
-//                mDanmakuView.prepare(mParser, mDanmakuContext);
-//            }
         }
     }
 
@@ -2098,9 +2102,13 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 激活弹幕
      */
     private void _resumeDanmaku() {
-        Log.e("TTAG", "_resumeDanmaku");
         if (mDanmakuView != null && mDanmakuView.isPrepared() && mDanmakuView.isPaused()) {
-            mDanmakuView.resume();
+            if (mDanmakuTargetPosition != INVALID_VALUE) {
+                mDanmakuView.seekTo(mDanmakuTargetPosition);
+                mDanmakuTargetPosition = INVALID_VALUE;
+            } else {
+                mDanmakuView.resume();
+            }
         }
     }
 

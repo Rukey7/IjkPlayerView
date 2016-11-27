@@ -18,4 +18,5 @@
     <color name="background_gray">#ffa5a5a5</color>
     <color name="background_gray_light">#ffbababa</color>
 
+    <color name="recover_screen_text">#f06292</color>
 </resources>

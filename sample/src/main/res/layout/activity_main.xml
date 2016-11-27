@@ -1,31 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-    android:id="@+id/activity_main"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
     android:orientation="vertical"
+    android:background="@mipmap/photo"
     tools:context="com.dl7.playerdemo.MainActivity">
 
     <Button
-        android:id="@+id/video_view"
-        android:layout_width="wrap_content"
-        android:text="Video View"
-        android:textAllCaps="false"
-        android:layout_height="wrap_content"/>
+        android:id="@+id/btn_video"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@mipmap/bg_card"
+        android:gravity="center"
+        android:text="竖屏/横屏切换播放"
+        android:textAllCaps="false"/>
 
     <Button
-        android:id="@+id/media_player"
-        android:layout_width="wrap_content"
-        android:text="Media Player"
-        android:textAllCaps="false"
-        android:layout_height="wrap_content"/>
+        android:id="@+id/btn_fullscreen_video"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@mipmap/bg_card"
+        android:gravity="center"
+        android:text="横屏/固定全屏播放"
+        android:textAllCaps="false"/>
 
     <Button
-        android:id="@+id/ijk_video_player"
-        android:layout_width="wrap_content"
-        android:text="IjkVideoView Player"
-        android:textAllCaps="false"
-        android:layout_height="wrap_content"/>
+        android:id="@+id/btn_test_aspect"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@mipmap/bg_card"
+        android:gravity="center"
+        android:text="测试设置视频宽高比"
+        android:textAllCaps="false"/>
+
 </LinearLayout>

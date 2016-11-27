@@ -5,24 +5,25 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.dl7.player.media.IjkPlayerView;
+import com.dl7.player.utils.SoftInputUtils;
 
 public class IjkPlayerActivity extends AppCompatActivity {
 
-//    private static final String VIDEO_URL = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4";
-//    private static final String VIDEO_URL_HD = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f30.mp4";
-    private static final String VIDEO_URL = "http://baobab.wdjcdn.com/14564977406580.mp4";
-    private static final String VIDEO_URL_HD = "http://183.6.245.249/v.cctv.com/flash/mp4video6/TMS/2011/01/05/cf752b1c12ce452b3040cab2f90bc265_h264818000nero_aac32-1.mp4";
-    private static final String IMAGE_URL = "http://i2.hdslb.com/video/46/46f6bb84ffdfedaa1973b5595322178d.jpg";
+    private static final String VIDEO_URL = "http://cn-sddz8-cu.acgvideo.com/vg6/a/e5/5090828-1-hd.mp4?expires=1480261500&ssig=MB21r_Nq3Q0Z9sNazyCY-g&oi=1866712258&rate=3100000";
+    private static final String IMAGE_URL = "http://i0.hdslb.com/320_200/video/f6/f689de4b185e4685b73f1340d65f3303.jpg";
+
     Toolbar mToolbar;
     private IjkPlayerView mPlayerView;
+    private View mEtLayout;
     private EditText mEditText;
-    private ImageView mIvSend;
+    private Button mIvSend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,25 +31,39 @@ public class IjkPlayerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ijk_player);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mPlayerView = (IjkPlayerView) findViewById(R.id.player_view);
-        mEditText = (EditText) findViewById(R.id.et_danmaku_text);
-        mIvSend = (ImageView) findViewById(R.id.iv_send_danmaku);
+        mEtLayout = findViewById(R.id.ll_layout);
+        mEditText = (EditText) findViewById(R.id.et_content);
+        mIvSend = (Button) findViewById(R.id.btn_send);
         setSupportActionBar(mToolbar);
         mToolbar.setTitle("Video Player");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
         mPlayerView.init()
                 .enableDanmaku()
-                .setSkipTip(1000*60*2)
+                .setSkipTip(1000*60*1)
                 .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
-                .setVideoSource(null, null, VIDEO_URL, VIDEO_URL_HD, null)
+                .enableDanmaku()
+                .setDanmakuSource(getResources().openRawResource(R.raw.bloody_bunny))
+                // 没找到不同分辨率的视频连接，直接设相同的
+                .setVideoSource(null, VIDEO_URL, VIDEO_URL, VIDEO_URL, null)
                 .setDanmakuSource(getResources().openRawResource(R.raw.comments))
-                .setMediaQuality(IjkPlayerView.MEDIA_QUALITY_SUPER);
+                .setMediaQuality(IjkPlayerView.MEDIA_QUALITY_HIGH);
 
         mIvSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mPlayerView.sendDanmaku(mEditText.getText().toString(), false);
                 mEditText.setText("");
+                _closeSoftInput();
+            }
+        });
+        mEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean isFocus) {
+                if (isFocus) {
+                    mPlayerView.editVideo();
+                }
             }
         });
     }
@@ -91,5 +106,32 @@ public class IjkPlayerActivity extends AppCompatActivity {
             return;
         }
         super.onBackPressed();
+    }
+
+
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        View view = getCurrentFocus();
+        if (_isHideSoftInput(view, (int) ev.getX(), (int) ev.getY())) {
+            _closeSoftInput();
+            return true;
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private void _closeSoftInput() {
+        mEditText.clearFocus();
+        SoftInputUtils.closeSoftInput(this);
+        mPlayerView.recoverFromEditVideo();
+    }
+
+    private boolean _isHideSoftInput(View view, int x, int y) {
+        if (view == null || !(view instanceof EditText)) {
+            return false;
+        }
+        return x < mEtLayout.getLeft() ||
+                x > mEtLayout.getRight() ||
+                y < mEtLayout.getTop();
     }
 }

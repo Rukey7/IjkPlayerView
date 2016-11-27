@@ -12,22 +12,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        findViewById(R.id.video_view).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, VideoViewActivity.class));
-            }
-        });
-        findViewById(R.id.media_player).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, MediaPlayerActivity.class));
-            }
-        });
-        findViewById(R.id.ijk_video_player).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_video).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, IjkPlayerActivity.class));
+            }
+        });
+        findViewById(R.id.btn_fullscreen_video).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, IjkFullscreenActivity.class));
+            }
+        });
+        findViewById(R.id.btn_test_aspect).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, TestAspectActivity.class));
             }
         });
     }

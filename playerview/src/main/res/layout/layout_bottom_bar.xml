@@ -17,7 +17,7 @@
         android:visibility="gone"
         android:textSize="20sp"
         android:text="还原屏幕"
-        android:textColor="@color/video_skip"/>
+        android:textColor="@color/recover_screen_text"/>
 
     <SeekBar
         android:id="@+id/danmaku_player_seek"
