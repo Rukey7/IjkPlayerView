@@ -15,8 +15,8 @@ import java.util.List;
 
 public class TestAspectActivity extends AppCompatActivity {
 
-    private static final String VIDEO_URL = "http://cn-hbcd-cu-v-02.acgvideo.com/vg5/2/95/11679028-1-hd.mp4?expires=1480265100&ssig=H3cXzQwX0TUJpR3RlP8L2A&oi=1866712258&rate=3100000";
-    private static final String IMAGE_URL = "http://i0.hdslb.com/bfs/archive/d7a0316a67fccded122fae5d95f12f2c8e3e07f4.jpg_320x200.jpg";
+    private static final String VIDEO_URL = "http://flv2.bn.netease.com/videolib3/1505/29/DCNOo7461/SD/DCNOo7461-mobile.mp4";
+    private static final String IMAGE_URL = "http://vimg3.ws.126.net/image/snapshot/2015/5/J/M/VAPRJCSJM.jpg";
 
     private IjkPlayerView mPlayerView;
     private ListView mListView;
@@ -38,7 +38,7 @@ public class TestAspectActivity extends AppCompatActivity {
 
         Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
         mPlayerView.init()
-                .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
+                .setTitle("美加州死亡谷石头会走路")
                 .setVideoPath(VIDEO_URL);
     }
 

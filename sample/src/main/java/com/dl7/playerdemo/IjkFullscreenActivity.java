@@ -9,8 +9,8 @@ import com.dl7.player.media.IjkPlayerView;
 
 public class IjkFullscreenActivity extends AppCompatActivity {
 
-    private static final String VIDEO_URL = "http://cn-hbcd-cu-v-02.acgvideo.com/vg4/f/f2/11505291-1-hd.mp4?expires=1480257000&ssig=sYWHwAnfgU_ZcU7dNSvM9Q&oi=1866712164&rate=3100000";
-    private static final String IMAGE_URL = "http://i0.hdslb.com/bfs/archive/014d7bb085edbf014ac179d382841b921a94cc76.jpg_320x200.jpg";
+    private static final String VIDEO_URL = "http://flv2.bn.netease.com/videolib3/1611/28/nNTov5571/SD/nNTov5571-mobile.mp4";
+    private static final String IMAGE_URL = "http://vimg3.ws.126.net/image/snapshot/2016/11/C/T/VC628QHCT.jpg";
     IjkPlayerView mPlayerView;
 
     @Override
@@ -22,10 +22,10 @@ public class IjkFullscreenActivity extends AppCompatActivity {
         mPlayerView.init()
                 .alwaysFullScreen()
                 .enableOrientation()
+                .setVideoPath(VIDEO_URL)
                 .enableDanmaku()
-                .setDanmakuSource(getResources().openRawResource(R.raw.audi_r8))
-                .setTitle("(1080P)全球仅一辆，《最终幻想15》 限定版奥迪R8 -----“路西斯之星”")
-                .setVideoSource(null, null, null, null, VIDEO_URL)
+                .setDanmakuSource(getResources().openRawResource(R.raw.comments))
+                .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
                 .start();
     }
 

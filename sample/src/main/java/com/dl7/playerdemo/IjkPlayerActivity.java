@@ -16,8 +16,9 @@ import com.dl7.player.utils.SoftInputUtils;
 
 public class IjkPlayerActivity extends AppCompatActivity {
 
-    private static final String VIDEO_URL = "http://cn-sddz8-cu.acgvideo.com/vg6/a/e5/5090828-1-hd.mp4?expires=1480261500&ssig=MB21r_Nq3Q0Z9sNazyCY-g&oi=1866712258&rate=3100000";
-    private static final String IMAGE_URL = "http://i0.hdslb.com/320_200/video/f6/f689de4b185e4685b73f1340d65f3303.jpg";
+    private static final String VIDEO_URL = "http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/SD/movie_index.m3u8";
+    private static final String VIDEO_HD_URL = "http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/HD/movie_index.m3u8";
+    private static final String IMAGE_URL = "http://vimg2.ws.126.net/image/snapshot/2016/11/I/M/VC62HMUIM.jpg";
 
     Toolbar mToolbar;
     private IjkPlayerView mPlayerView;
@@ -40,14 +41,11 @@ public class IjkPlayerActivity extends AppCompatActivity {
 
         Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
         mPlayerView.init()
-                .enableDanmaku()
-                .setSkipTip(1000*60*1)
                 .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
+                .setSkipTip(1000*60*1)
                 .enableDanmaku()
-                .setDanmakuSource(getResources().openRawResource(R.raw.bloody_bunny))
-                // 没找到不同分辨率的视频连接，直接设相同的
-                .setVideoSource(null, VIDEO_URL, VIDEO_URL, VIDEO_URL, null)
                 .setDanmakuSource(getResources().openRawResource(R.raw.comments))
+                .setVideoSource(null, VIDEO_URL, VIDEO_HD_URL, null, null)
                 .setMediaQuality(IjkPlayerView.MEDIA_QUALITY_HIGH);
 
         mIvSend.setOnClickListener(new View.OnClickListener() {

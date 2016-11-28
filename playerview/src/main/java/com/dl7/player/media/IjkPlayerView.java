@@ -1102,10 +1102,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
                 if (isLandscape) {
                     _onProgressSlide(-deltaX / mVideoView.getWidth());
-//                    if (!isLive) {
-//                        /**进度设置*/
-//                        _onProgressSlide(-deltaX / videoView.getWidth());
-//                    }
                 } else {
                     float percent = deltaY / mVideoView.getHeight();
                     if (isVolume) {
@@ -1906,7 +1902,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mIvDoSend.setOnClickListener(this);
 
         int navigationBarHeight = NavUtils.getNavigationBarHeight(mAttachActivity);
-        if (navigationBarHeight != 0) {
+        if (navigationBarHeight > 0) {
             // 对于有虚拟键的设备需要将弹幕编辑布局右偏移防止被覆盖
             mEditDanmakuLayout.setPadding(0, 0, navigationBarHeight, 0);
         }
