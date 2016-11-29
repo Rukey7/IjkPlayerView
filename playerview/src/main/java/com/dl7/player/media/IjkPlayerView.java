@@ -996,7 +996,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 设置UI沉浸式显示
      */
     private void _setUiLayoutFullscreen() {
-        if (Build.VERSION.SDK_INT >= 19) {
+        if (Build.VERSION.SDK_INT >= 14) {
             // 获取关联 Activity 的 DecorView
             View decorView = mAttachActivity.getWindow().getDecorView();
             // 沉浸式使用这些Flag
@@ -1026,7 +1026,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     public void configurationChanged(Configuration newConfig) {
         _refreshOrientationEnable();
         // 沉浸式只能在SDK19以上实现
-        if (Build.VERSION.SDK_INT >= 19) {
+        if (Build.VERSION.SDK_INT >= 14) {
             if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 // 获取关联 Activity 的 DecorView
                 View decorView = mAttachActivity.getWindow().getDecorView();

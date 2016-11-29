@@ -25,6 +25,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
     private View mEtLayout;
     private EditText mEditText;
     private Button mIvSend;
+    private boolean mIsFocus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +63,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
                 if (isFocus) {
                     mPlayerView.editVideo();
                 }
+                mIsFocus = isFocus;
             }
         });
     }
@@ -125,7 +127,7 @@ public class IjkPlayerActivity extends AppCompatActivity {
     }
 
     private boolean _isHideSoftInput(View view, int x, int y) {
-        if (view == null || !(view instanceof EditText)) {
+        if (view == null || !(view instanceof EditText) || !mIsFocus) {
             return false;
         }
         return x < mEtLayout.getLeft() ||
