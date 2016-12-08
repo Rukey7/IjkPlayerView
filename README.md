@@ -155,10 +155,6 @@ Ensure IjkPlayerView is on the top of your layout except ToolBar.
 - [DanmakuFlameMaster](https://github.com/Bilibili/DanmakuFlameMaster)
 - [jjdxm_ijkplayer](https://github.com/jjdxmashl/jjdxm_ijkplaye)
 
-### Blog
-
-[http://blog.csdn.net/github_35180164/article/details/53376923](http://blog.csdn.net/github_35180164/article/details/53376923)
-
 License
 -------
 
