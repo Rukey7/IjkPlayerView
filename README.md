@@ -3,7 +3,15 @@
 
 IjkPlayerView is an media player for Android base on [ijkplayer](https://github.com/Bilibili/ijkplayer). It used to play video both locally and over the Internet.
 
-### Using IjkPlayerView
+## Screenshot
+
+![](https://raw.githubusercontent.com/Rukey7/ScreenShot/master/IjkPlayerView/horizontal3.png)
+![](https://raw.githubusercontent.com/Rukey7/ScreenShot/master/IjkPlayerView/horizontal.png)
+![](https://raw.githubusercontent.com/Rukey7/ScreenShot/master/IjkPlayerView/send_danmaku.png)
+![](https://raw.githubusercontent.com/Rukey7/ScreenShot/master/IjkPlayerView/danmaku_h.gif)
+![](https://raw.githubusercontent.com/Rukey7/ScreenShot/master/IjkPlayerView/scale.gif)
+
+## Using IjkPlayerView
 
 You need to make sure you have the JitPack repository included inthe `build.gradle` file in the root of your project:
 
@@ -25,7 +33,7 @@ compile 'com.github.Rukey7:IjkPlayerView:{lastest-version}'
 where `{lastest-version}` is the your preferred version. For the latest version, see the
 project's [Releases][]. For more details, see the project on [jitpack.io](https://jitpack.io/#Rukey7/IjkPlayerView).
 
-### Usage
+## Usage
 
 Add the configuration to your Activity in the AndroidManifest.xml:
 
