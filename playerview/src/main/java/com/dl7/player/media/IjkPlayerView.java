@@ -49,6 +49,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dl7.player.R;
+import com.dl7.player.danmaku.BiliDanmukuParser;
 import com.dl7.player.utils.AnimHelper;
 import com.dl7.player.utils.MotionEventUtils;
 import com.dl7.player.utils.NavUtils;
@@ -80,7 +81,6 @@ import master.flame.danmaku.danmaku.model.android.DanmakuContext;
 import master.flame.danmaku.danmaku.model.android.Danmakus;
 import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
 import master.flame.danmaku.danmaku.parser.IDataSource;
-import master.flame.danmaku.danmaku.parser.android.BiliDanmukuParser;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
@@ -540,6 +540,14 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         }
         // 视频播放时开启屏幕常亮
         mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    /**
+     * 是否正在播放
+     * @return
+     */
+    public boolean isPlaying() {
+        return mVideoView.isPlaying();
     }
 
     /**
@@ -1959,6 +1967,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         if (mIsEnableDanmaku) {
             // 设置弹幕
             mDanmakuContext = DanmakuContext.create();
+            //同步弹幕和video，貌似没法保持同步，可能我用的有问题，先注释掉- -
+//            mDanmakuContext.setDanmakuSync(new VideoDanmakuSync(this));
             if (mParser == null) {
                 mParser = new BaseDanmakuParser() {
                     @Override
