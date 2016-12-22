@@ -27,8 +27,8 @@ import master.flame.danmaku.danmaku.util.DanmakuUtils;
 
 /**
  * Created by long on 2016/12/15.
+ * b站弹幕解析器
  */
-
 public class BiliDanmukuParser extends BaseDanmakuParser {
 
     static {

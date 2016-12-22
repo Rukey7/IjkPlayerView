@@ -1,8 +1,8 @@
 package com.dl7.playerdemo;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,8 +27,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_test_aspect).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, TestAspectActivity.class));
+                startActivity(new Intent(MainActivity.this, CustomDanmakuActivity.class));
             }
         });
+
+//        DataHelper.afunData2CustomData(this);
     }
 }

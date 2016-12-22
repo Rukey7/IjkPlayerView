@@ -4,6 +4,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,10 +12,18 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.bumptech.glide.Glide;
+import com.dl7.player.danmaku.OnDanmakuListener;
 import com.dl7.player.media.IjkPlayerView;
 import com.dl7.player.utils.SoftInputUtils;
+import com.dl7.playerdemo.danmaku.DanmakuData;
+import com.dl7.playerdemo.danmaku.DanmakuLoader;
+import com.dl7.playerdemo.danmaku.DanmakuParser;
+import com.dl7.playerdemo.utils.GsonHelper;
 
-public class IjkPlayerActivity extends AppCompatActivity {
+import java.io.IOException;
+import java.io.InputStream;
+
+public class CustomDanmakuActivity extends AppCompatActivity {
 
     private static final String VIDEO_URL = "http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/SD/movie_index.m3u8";
     private static final String VIDEO_HD_URL = "http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/HD/movie_index.m3u8";
@@ -40,14 +49,34 @@ public class IjkPlayerActivity extends AppCompatActivity {
         mToolbar.setTitle("Video Player");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        InputStream stream = null;
+        try {
+            stream = getAssets().open("custom.json");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
         mPlayerView.init()
                 .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
-                .setSkipTip(1000*60*1)
                 .enableDanmaku()
-                .setDanmakuSource(getResources().openRawResource(R.raw.bili))
-                .setVideoSource(null, VIDEO_URL, VIDEO_HD_URL, null, null)
-                .setMediaQuality(IjkPlayerView.MEDIA_QUALITY_HIGH);
+//                .setDanmakuCustomParser(new AcFunDanmakuParser(), AcFunDanmakuLoader.instance(), null)
+                .setDanmakuCustomParser(new DanmakuParser(), DanmakuLoader.instance(), null)
+                .setDanmakuSource(stream)
+                .setVideoPath(VIDEO_URL)
+                .setDanmakuListener(new OnDanmakuListener<DanmakuData>() {
+                    @Override
+                    public boolean isValid() {
+                        Log.w("CustomDanmakuActivity", "准备发射弹幕");
+                        return false;
+                    }
+
+                    @Override
+                    public void onDataObtain(DanmakuData data) {
+                        Log.e("CustomDanmakuActivity", data.toString());
+                        Log.e("CustomDanmakuActivity", GsonHelper.object2JsonStr(data));
+                        Log.e("CustomDanmakuActivity", GsonHelper.object2JsonStr(data.toString()));
+                    }
+                });
 
         mIvSend.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,7 +138,6 @@ public class IjkPlayerActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         View view = getCurrentFocus();
@@ -134,4 +162,5 @@ public class IjkPlayerActivity extends AppCompatActivity {
                 x > mEtLayout.getRight() ||
                 y < mEtLayout.getTop();
     }
+
 }

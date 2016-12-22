@@ -50,6 +50,8 @@ import android.widget.Toast;
 
 import com.dl7.player.R;
 import com.dl7.player.danmaku.BiliDanmukuParser;
+import com.dl7.player.danmaku.BaseDanmakuConverter;
+import com.dl7.player.danmaku.OnDanmakuListener;
 import com.dl7.player.utils.AnimHelper;
 import com.dl7.player.utils.MotionEventUtils;
 import com.dl7.player.utils.NavUtils;
@@ -390,7 +392,10 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         Log.i("TTAG", "onDestroy");
         // 记录播放进度
         int curPosition = mVideoView.getCurrentPosition();
+
+        Log.e("TTAG", "onDestroy " + System.currentTimeMillis());
         mVideoView.destroy();
+        Log.e("TTAG", "onDestroy " + System.currentTimeMillis());
         IjkMediaPlayer.native_profileEnd();
         if (mDanmakuView != null) {
             // don't forget release!
@@ -544,6 +549,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 是否正在播放
+     *
      * @return
      */
     public boolean isPlaying() {
@@ -803,6 +809,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
     /**
      * 显示宽高比设置
+     *
      * @param isShow
      */
     private void _showAspectRatioOptions(boolean isShow) {
@@ -849,9 +856,11 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         } else if (id == R.id.iv_danmaku_control) {
             _toggleDanmakuShow();
         } else if (id == R.id.tv_open_edit_danmaku) {
-            editVideo();
-            mEditDanmakuLayout.setVisibility(VISIBLE);
-            SoftInputUtils.setEditFocusable(mAttachActivity, mEtDanmakuContent);
+            if (mDanmakuListener == null || mDanmakuListener.isValid()) {
+                editVideo();
+                mEditDanmakuLayout.setVisibility(VISIBLE);
+                SoftInputUtils.setEditFocusable(mAttachActivity, mEtDanmakuContent);
+            }
         } else if (id == R.id.iv_cancel_send) {
             recoverFromEditVideo();
         } else if (id == R.id.iv_do_send) {
@@ -1578,6 +1587,14 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
+     * 设置弹幕监听器
+     * @param danmakuListener
+     */
+    public void setDanmakuListener(OnDanmakuListener danmakuListener) {
+        mDanmakuListener = danmakuListener;
+    }
+
+    /**
      * ============================ 播放清晰度 ============================
      */
 
@@ -1825,15 +1842,22 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     private static final int INTERRUPT_WHEN_PLAY = 502;
     private static final int INTERRUPT_WHEN_PAUSE = 503;
 
+    private int mVideoStatus = NORMAL_STATUS;
+
+    // 弹幕格式：B站、A站和自定义
+    private static final int DANMAKU_TAG_BILI = 701;
+    private static final int DANMAKU_TAG_ACFUN = 702;
+    private static final int DANMAKU_TAG_CUSTOM = 703;
+
     @Retention(RetentionPolicy.SOURCE)
-    @Target(ElementType.FIELD)
-    @IntDef({NORMAL_STATUS, INTERRUPT_WHEN_PLAY, INTERRUPT_WHEN_PAUSE})
-    @interface VideoStatus {
+    @Target({ElementType.FIELD, ElementType.PARAMETER})
+    @IntDef({DANMAKU_TAG_BILI, DANMAKU_TAG_ACFUN, DANMAKU_TAG_CUSTOM})
+    public @interface DanmakuTag {
     }
 
     private
-    @VideoStatus
-    int mVideoStatus = NORMAL_STATUS;
+    @DanmakuTag
+    int mDanmakuTag = DANMAKU_TAG_BILI;
 
     // 弹幕开源控件
     private IDanmakuView mDanmakuView;
@@ -1872,7 +1896,13 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     // 弹幕控制相关
     private DanmakuContext mDanmakuContext;
     // 弹幕解析器
-    private BaseDanmakuParser mParser;
+    private BaseDanmakuParser mDanmakuParser;
+    // 弹幕加载器
+    private ILoader mDanmakuLoader;
+    // 弹幕数据转换器
+    private BaseDanmakuConverter mDanmakuConverter;
+    // 弹幕监听器
+    private OnDanmakuListener mDanmakuListener;
     // 是否使能弹幕
     private boolean mIsEnableDanmaku = false;
     // 弹幕颜色
@@ -1931,9 +1961,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (checkedId == R.id.input_options_small_textsize) {
-                    mDanmakuTextSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f) * 0.7f;
+                    mDanmakuTextSize = 25f * (mDanmakuParser.getDisplayer().getDensity() - 0.6f) * 0.7f;
                 } else if (checkedId == R.id.input_options_medium_textsize) {
-                    mDanmakuTextSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
+                    mDanmakuTextSize = 25f * (mDanmakuParser.getDisplayer().getDensity() - 0.6f);
                 }
             }
         });
@@ -1969,8 +1999,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mDanmakuContext = DanmakuContext.create();
             //同步弹幕和video，貌似没法保持同步，可能我用的有问题，先注释掉- -
 //            mDanmakuContext.setDanmakuSync(new VideoDanmakuSync(this));
-            if (mParser == null) {
-                mParser = new BaseDanmakuParser() {
+            if (mDanmakuParser == null) {
+                mDanmakuParser = new BaseDanmakuParser() {
                     @Override
                     protected Danmakus parse() {
                         return new Danmakus();
@@ -1978,7 +2008,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 };
             }
             mDanmakuView.enableDanmakuDrawingCache(true);
-            mDanmakuView.prepare(mParser, mDanmakuContext);
+            mDanmakuView.prepare(mDanmakuParser, mDanmakuContext);
         }
     }
 
@@ -1997,7 +2027,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
-     * 设置弹幕资源，资源格式需满足 bilibili 的弹幕文件格式
+     * 设置弹幕资源，默认资源格式需满足 bilibili 的弹幕文件格式，
+     * 配合{@link #setDanmakuCustomParser}来进行自定义弹幕解析方式，{@link #setDanmakuCustomParser}必须先调用
      *
      * @param stream 弹幕资源
      * @return
@@ -2009,16 +2040,33 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         if (!mIsEnableDanmaku) {
             throw new RuntimeException("Danmaku is disable, use enableDanmaku() first");
         }
-        ILoader loader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
+        if (mDanmakuLoader == null) {
+            mDanmakuLoader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
+        }
         try {
-            loader.load(stream);
+            mDanmakuLoader.load(stream);
         } catch (IllegalDataException e) {
             e.printStackTrace();
         }
-        mParser = new BiliDanmukuParser();
-        IDataSource<?> dataSource = loader.getDataSource();
-        mParser.load(dataSource);
-//        mDanmakuView.prepare(mParser, mDanmakuContext);
+        IDataSource<?> dataSource = mDanmakuLoader.getDataSource();
+        if (mDanmakuParser == null) {
+            mDanmakuParser = new BiliDanmukuParser();
+        }
+        mDanmakuParser.load(dataSource);
+        return this;
+    }
+
+    /**
+     * 自定义弹幕解析器，配合{@link #setDanmakuSource}使用，先于{@link #setDanmakuSource}调用
+     *
+     * @param parser
+     * @param loader
+     * @return
+     */
+    public IjkPlayerView setDanmakuCustomParser(BaseDanmakuParser parser, ILoader loader, BaseDanmakuConverter converter) {
+        mDanmakuParser = parser;
+        mDanmakuLoader = loader;
+        mDanmakuConverter = converter;
         return this;
     }
 
@@ -2044,21 +2092,22 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      *
      * @param text   内容
      * @param isLive 是否直播
+     * @return  弹幕数据
      */
-    public BaseDanmaku sendDanmaku(String text, boolean isLive) {
+    public void sendDanmaku(String text, boolean isLive) {
         if (!mIsEnableDanmaku) {
             throw new RuntimeException("Danmaku is disable, use enableDanmaku() first");
         }
         if (TextUtils.isEmpty(text)) {
             Toast.makeText(mAttachActivity, "内容为空", Toast.LENGTH_SHORT).show();
-            return null;
+            return;
         }
         BaseDanmaku danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(mDanmakuType);
         if (danmaku == null || mDanmakuView == null) {
-            return null;
+            return;
         }
         if (mDanmakuTextSize == INVALID_VALUE) {
-            mDanmakuTextSize = 25f * (mParser.getDisplayer().getDensity() - 0.6f);
+            mDanmakuTextSize = 25f * (mDanmakuParser.getDisplayer().getDensity() - 0.6f);
         }
         danmaku.text = text;
         danmaku.padding = 5;
@@ -2069,7 +2118,26 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         danmaku.underlineColor = Color.GREEN;
         danmaku.setTime(mDanmakuView.getCurrentTime());
         mDanmakuView.addDanmaku(danmaku);
-        return danmaku;
+
+        if (mDanmakuListener != null) {
+            if (mDanmakuConverter != null) {
+                mDanmakuListener.onDataObtain(mDanmakuConverter.convertDanmaku(danmaku));
+            } else {
+                mDanmakuListener.onDataObtain(danmaku);
+            }
+        }
+    }
+
+    /**
+     * 类型转换
+     */
+    @SuppressWarnings("unchecked") // That's the point.
+    private <T> T _castType(Object object) {
+        try {
+            return (T) object;
+        } catch (ClassCastException e) {
+            throw new IllegalStateException("Object was of the wrong type. See cause for more info.", e);
+        }
     }
 
     /**
