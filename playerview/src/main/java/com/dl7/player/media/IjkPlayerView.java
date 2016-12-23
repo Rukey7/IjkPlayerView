@@ -391,13 +391,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * @return 返回播放进度
      */
     public int onDestroy() {
-        Log.i("TTAG", "onDestroy");
         // 记录播放进度
         int curPosition = mVideoView.getCurrentPosition();
-
-        Log.e("TTAG", "onDestroy " + System.currentTimeMillis());
         mVideoView.destroy();
-        Log.e("TTAG", "onDestroy " + System.currentTimeMillis());
         IjkMediaPlayer.native_profileEnd();
         if (mDanmakuView != null) {
             // don't forget release!
@@ -944,7 +940,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * @param orientation
      */
     private void _handleOrientation(int orientation) {
-//        Log.i("TTAG", "" + orientation);
         if (mIsNeverPlay) {
             return;
         }
@@ -1497,7 +1492,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * @param status
      */
     private void _switchStatus(int status) {
-        Log.e("TTAG", "status " + status);
+        Log.d("TTAG", "status " + status);
         switch (status) {
             case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
                 mIsBufferingStart = true;
@@ -1531,10 +1526,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                 break;
             case MediaPlayerParams.STATE_ERROR:
                 _pauseDanmaku();
-//                mCurPosition = mVideoView.getCurrentPosition();
-//                mVideoView.release(false);
-//                mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
-//                setVideoPath(mVideoView.getUri());
                 break;
 
             case MediaPlayerParams.STATE_COMPLETED:
@@ -2097,10 +2088,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             mDanmakuLoader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
         }
         try {
-            Log.w("IjkPlayerView", uri);
             mDanmakuLoader.load(uri);
         } catch (IllegalDataException e) {
-            Log.e("IjkPlayerView", e.toString());
             e.printStackTrace();
         }
         IDataSource<?> dataSource = mDanmakuLoader.getDataSource();
