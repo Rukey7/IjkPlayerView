@@ -140,6 +140,28 @@ If you want keep fullscreen, you can do this:
 
 ```
 
+You can use custom data type of Danmaku. For more details please see the example.
+```java
+	
+    mPlayerView.init()
+            .enableDanmaku()
+            .setDanmakuCustomParser(new DanmakuParser(), DanmakuLoader.instance(), DanmakuConverter.instance())
+            .setDanmakuSource(stream)
+            .setVideoPath(VIDEO_URL)	
+            .setDanmakuListener(new OnDanmakuListener<DanmakuData>() {
+                    @Override
+                    public boolean isValid() {
+                        return true;
+                    }
+
+                    @Override
+                    public void onDataObtain(DanmakuData data) {
+                    }
+                });
+
+```
+
+
 ### Other
 
 There will be some problems in fullscreen when you use do the following options:
