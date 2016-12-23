@@ -2,7 +2,6 @@ package com.dl7.playerdemo.danmaku;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.json.JSONException;
 
@@ -18,8 +17,8 @@ import master.flame.danmaku.danmaku.util.IOUtils;
 
 /**
  * Created by long on 2016/12/22.
+ * 自定义弹幕数据源，参考A站
  */
-
 public class JsonStrSource implements IDataSource<String> {
 
     private String mJsonStr;
@@ -59,7 +58,6 @@ public class JsonStrSource implements IDataSource<String> {
 
     private void init(String json) throws JSONException {
         if(!TextUtils.isEmpty(json)){
-            Log.w("JsonStrSource", json);
             mJsonStr = json;
         }
     }

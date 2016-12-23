@@ -10,6 +10,7 @@ import master.flame.danmaku.danmaku.model.AbsDanmakuSync;
  * Created by long on 2016/12/15.
  * 同步弹幕和video，貌似没法保持同步，可能我用的有问题- -
  */
+@Deprecated
 public class VideoDanmakuSync extends AbsDanmakuSync {
 
     private final IjkPlayerView mPlayerView;

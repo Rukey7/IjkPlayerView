@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.dl7.player.danmaku.OnDanmakuListener;
 import com.dl7.player.media.IjkPlayerView;
 import com.dl7.player.utils.SoftInputUtils;
+import com.dl7.playerdemo.danmaku.DanmakuConverter;
 import com.dl7.playerdemo.danmaku.DanmakuData;
 import com.dl7.playerdemo.danmaku.DanmakuLoader;
 import com.dl7.playerdemo.danmaku.DanmakuParser;
@@ -26,7 +27,6 @@ import java.io.InputStream;
 public class CustomDanmakuActivity extends AppCompatActivity {
 
     private static final String VIDEO_URL = "http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/SD/movie_index.m3u8";
-    private static final String VIDEO_HD_URL = "http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/HD/movie_index.m3u8";
     private static final String IMAGE_URL = "http://vimg2.ws.126.net/image/snapshot/2016/11/I/M/VC62HMUIM.jpg";
 
     Toolbar mToolbar;
@@ -60,21 +60,27 @@ public class CustomDanmakuActivity extends AppCompatActivity {
                 .setTitle("这是个跑马灯TextView，标题要足够长才会跑。-(゜ -゜)つロ 乾杯~")
                 .enableDanmaku()
 //                .setDanmakuCustomParser(new AcFunDanmakuParser(), AcFunDanmakuLoader.instance(), null)
-                .setDanmakuCustomParser(new DanmakuParser(), DanmakuLoader.instance(), null)
+                // 注意 setDanmakuCustomParser() 要在 setDanmakuSource() 前调用
+                .setDanmakuCustomParser(new DanmakuParser(), DanmakuLoader.instance(), DanmakuConverter.instance())
                 .setDanmakuSource(stream)
                 .setVideoPath(VIDEO_URL)
                 .setDanmakuListener(new OnDanmakuListener<DanmakuData>() {
                     @Override
                     public boolean isValid() {
+                        // TODO: 这里可以控制全屏模式下的是否可以发射弹幕，返回 true 才能发射，可判断用户是否登录
                         Log.w("CustomDanmakuActivity", "准备发射弹幕");
-                        return false;
+                        return true;
                     }
 
                     @Override
                     public void onDataObtain(DanmakuData data) {
+                        // 添加个人信息
+                        data.userName = "LONG";
+                        data.userLevel = 2;
+                        // 这个转换的数据格式 DanmakuData 需要配合 DanmakuConverter 来实现，如果没有设置转换器则默认返回 BaseDanmaku
                         Log.e("CustomDanmakuActivity", data.toString());
+                        // GsonHelper.object2JsonStr(data)转换为Json字符串，可以直接保存到文件或服务器，参考{assets/custom.json}文件
                         Log.e("CustomDanmakuActivity", GsonHelper.object2JsonStr(data));
-                        Log.e("CustomDanmakuActivity", GsonHelper.object2JsonStr(data.toString()));
                     }
                 });
 
@@ -149,8 +155,8 @@ public class CustomDanmakuActivity extends AppCompatActivity {
     }
 
     private void _closeSoftInput() {
-        mEditText.clearFocus();
         SoftInputUtils.closeSoftInput(this);
+        mEditText.clearFocus();
         mPlayerView.recoverFromEditVideo();
     }
 

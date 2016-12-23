@@ -17,6 +17,11 @@ public abstract class BaseDanmakuConverter<T extends BaseDanmakuData> {
 
     public abstract T convertDanmaku(BaseDanmaku danmaku);
 
+    /**
+     * 对弹幕的基础数据进行初始化
+     * @param data
+     * @param danmaku
+     */
     protected void initData(T data, BaseDanmaku danmaku) {
         int danmakuType = TYPE_SCROLL_RL;
         if (danmaku instanceof R2LDanmaku) {

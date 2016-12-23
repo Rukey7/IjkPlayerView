@@ -49,8 +49,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dl7.player.R;
-import com.dl7.player.danmaku.BiliDanmukuParser;
 import com.dl7.player.danmaku.BaseDanmakuConverter;
+import com.dl7.player.danmaku.BiliDanmukuParser;
 import com.dl7.player.danmaku.OnDanmakuListener;
 import com.dl7.player.utils.AnimHelper;
 import com.dl7.player.utils.MotionEventUtils;
@@ -74,11 +74,13 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 
+import master.flame.danmaku.controller.DrawHandler;
 import master.flame.danmaku.controller.IDanmakuView;
 import master.flame.danmaku.danmaku.loader.ILoader;
 import master.flame.danmaku.danmaku.loader.IllegalDataException;
 import master.flame.danmaku.danmaku.loader.android.DanmakuLoaderFactory;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
+import master.flame.danmaku.danmaku.model.DanmakuTimer;
 import master.flame.danmaku.danmaku.model.android.DanmakuContext;
 import master.flame.danmaku.danmaku.model.android.Danmakus;
 import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
@@ -2007,6 +2009,27 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
                     }
                 };
             }
+            mDanmakuView.setCallback(new DrawHandler.Callback() {
+                @Override
+                public void prepared() {
+                    // 这里处理下有时调用 _resumeDanmaku() 时弹幕还没 prepared 的情况
+                    if (mVideoView.isPlaying() && !mIsBufferingStart) {
+                        mDanmakuView.start();
+                    }
+                }
+
+                @Override
+                public void updateTimer(DanmakuTimer timer) {
+                }
+
+                @Override
+                public void danmakuShown(BaseDanmaku danmaku) {
+                }
+
+                @Override
+                public void drawingFinished() {
+                }
+            });
             mDanmakuView.enableDanmakuDrawingCache(true);
             mDanmakuView.prepare(mDanmakuParser, mDanmakuContext);
         }
@@ -2057,10 +2080,43 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
+     * 设置弹幕资源，默认资源格式需满足 bilibili 的弹幕文件格式，
+     * 配合{@link #setDanmakuCustomParser}来进行自定义弹幕解析方式，{@link #setDanmakuCustomParser}必须先调用
+     *
+     * @param uri 弹幕资源
+     * @return
+     */
+    public IjkPlayerView setDanmakuSource(String uri) {
+        if (TextUtils.isEmpty(uri)) {
+            return this;
+        }
+        if (!mIsEnableDanmaku) {
+            throw new RuntimeException("Danmaku is disable, use enableDanmaku() first");
+        }
+        if (mDanmakuLoader == null) {
+            mDanmakuLoader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
+        }
+        try {
+            Log.w("IjkPlayerView", uri);
+            mDanmakuLoader.load(uri);
+        } catch (IllegalDataException e) {
+            Log.e("IjkPlayerView", e.toString());
+            e.printStackTrace();
+        }
+        IDataSource<?> dataSource = mDanmakuLoader.getDataSource();
+        if (mDanmakuParser == null) {
+            mDanmakuParser = new BiliDanmukuParser();
+        }
+        mDanmakuParser.load(dataSource);
+        return this;
+    }
+
+    /**
      * 自定义弹幕解析器，配合{@link #setDanmakuSource}使用，先于{@link #setDanmakuSource}调用
      *
-     * @param parser
-     * @param loader
+     * @param parser    解析器
+     * @param loader    加载器
+     * @param converter 转换器
      * @return
      */
     public IjkPlayerView setDanmakuCustomParser(BaseDanmakuParser parser, ILoader loader, BaseDanmakuConverter converter) {
@@ -2116,7 +2172,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         danmaku.textSize = mDanmakuTextSize;
         danmaku.textColor = mDanmakuTextColor;
         danmaku.underlineColor = Color.GREEN;
-        danmaku.setTime(mDanmakuView.getCurrentTime());
+        danmaku.setTime(mDanmakuView.getCurrentTime() + 500);
         mDanmakuView.addDanmaku(danmaku);
 
         if (mDanmakuListener != null) {
@@ -2125,18 +2181,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
             } else {
                 mDanmakuListener.onDataObtain(danmaku);
             }
-        }
-    }
-
-    /**
-     * 类型转换
-     */
-    @SuppressWarnings("unchecked") // That's the point.
-    private <T> T _castType(Object object) {
-        try {
-            return (T) object;
-        } catch (ClassCastException e) {
-            throw new IllegalStateException("Object was of the wrong type. See cause for more info.", e);
         }
     }
 

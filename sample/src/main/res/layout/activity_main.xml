@@ -40,4 +40,13 @@
         android:text="测试设置视频宽高比"
         android:textAllCaps="false"/>
 
+    <Button
+        android:id="@+id/btn_custom_danmaku"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@mipmap/bg_card"
+        android:gravity="center"
+        android:text="自定义弹幕解析"
+        android:textAllCaps="false"/>
 </LinearLayout>

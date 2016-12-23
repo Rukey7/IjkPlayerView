@@ -6,8 +6,8 @@ import master.flame.danmaku.danmaku.model.BaseDanmaku;
 
 /**
  * Created by long on 2016/12/22.
+ * 弹幕数据转换器
  */
-
 public class DanmakuConverter extends BaseDanmakuConverter<DanmakuData> {
 
     private DanmakuConverter(){}
@@ -26,6 +26,7 @@ public class DanmakuConverter extends BaseDanmakuConverter<DanmakuData> {
     @Override
     public DanmakuData convertDanmaku(BaseDanmaku danmaku) {
         DanmakuData data = new DanmakuData();
+        // 弹幕基础数据初始化，重要！记得调用
         initData(data, danmaku);
         return data;
     }

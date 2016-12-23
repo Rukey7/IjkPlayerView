@@ -13,4 +13,15 @@ public abstract class BaseDanmakuData {
     public long time;
     public float textSize;
     public int textColor;
+
+    @Override
+    public String toString() {
+        return "BaseDanmakuData{" +
+                "type=" + type +
+                ", content='" + content + '\'' +
+                ", time=" + time +
+                ", textSize=" + textSize +
+                ", textColor=" + textColor +
+                '}';
+    }
 }

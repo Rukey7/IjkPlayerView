@@ -17,8 +17,8 @@ import static android.R.attr.textColor;
 
 /**
  * Created by long on 2016/12/22.
+ * 自定义弹幕解析器，参考A站
  */
-
 public class DanmakuParser extends BaseDanmakuParser {
 
     @Override
