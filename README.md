@@ -1,6 +1,8 @@
 # IjkPlayerView
 [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0.html) [![](https://jitpack.io/v/Rukey7/IjkPlayerView.svg)](https://jitpack.io/#Rukey7/IjkPlayerView)
 
+### [中文](https://github.com/Rukey7/IjkPlayerView/blob/master/README_C.md)
+
 IjkPlayerView is an media player for Android base on [ijkplayer](https://github.com/Bilibili/ijkplayer). It used to play video both locally and over the Internet.
 
 ## Screenshot
