@@ -1,9 +1,7 @@
 # IjkPlayerView
 [![Apache 2.0 License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0.html) [![](https://jitpack.io/v/Rukey7/IjkPlayerView.svg)](https://jitpack.io/#Rukey7/IjkPlayerView)
 
-### [中文](https://github.com/Rukey7/IjkPlayerView/blob/master/README_C.md)
-
-IjkPlayerView is an media player for Android base on [ijkplayer](https://github.com/Bilibili/ijkplayer). It used to play video both locally and over the Internet.
+IjkPlayerView是一个基于[ijkplayer](https://github.com/Bilibili/ijkplayer)的视屏播放库，可以用于播放本地和网络视频。
 
 ## Screenshot
 
@@ -15,7 +13,7 @@ IjkPlayerView is an media player for Android base on [ijkplayer](https://github.
 
 ## Using IjkPlayerView
 
-You need to make sure you have the JitPack repository included inthe `build.gradle` file in the root of your project:
+你需要在项目的根 `build.gradle` 加入如下JitPack仓库链接：
 
 ```gradle
 allprojects {
@@ -26,18 +24,17 @@ allprojects {
 	}
 ```
 
-Next, include the following in your module's `build.gradle` file:
+接着在你的需要依赖的Module的`build.gradle`加入依赖:
 
 ```gradle
 compile 'com.github.Rukey7:IjkPlayerView:{lastest-version}'
 ```
 
-where `{lastest-version}` is the your preferred version. For the latest version, see the
-project's [Releases][]. For more details, see the project on [jitpack.io](https://jitpack.io/#Rukey7/IjkPlayerView).
+其中 `{lastest-version}` 为最新的版本，你可以查看上面显示的jitpack版本信息，也可以到[jitpack.io](https://jitpack.io/#Rukey7/IjkPlayerView)仓库查看。
 
 ## Usage
 
-Add the configuration to your Activity in the AndroidManifest.xml:
+在项目的AndroidManifest.xml文件中队activity进行如下配置：
 
 ```xml
 	<activity  
@@ -45,7 +42,7 @@ Add the configuration to your Activity in the AndroidManifest.xml:
 	    android:configChanges="orientation|keyboardHidden|screenSize"/>
 ```
 
-Using IjkPlayerView is like to use other widgets in your layout:
+把IjkPlayerView作为一个控件添加到你的布局中：
 
 ```xml
 	<com.dl7.player.media.IjkPlayerView  
@@ -54,7 +51,7 @@ Using IjkPlayerView is like to use other widgets in your layout:
 	    android:layout_height="200dp"/>  
 ```
 
-Finally, you should do this in your activity:
+最后，在activity中你需要做一些功能上的控制处理，就如下面这样配置：
 
 ```java
 
@@ -124,7 +121,8 @@ Finally, you should do this in your activity:
 
 ```
 
-If you want keep fullscreen, you can do this:
+如果你要使用固定全屏播放，可以按下处理：
+
 ```java
 	
 	@Override
@@ -142,7 +140,8 @@ If you want keep fullscreen, you can do this:
 
 ```
 
-You can use custom data type of Danmaku. For more details please see the example.
+库里也提供了自定义弹幕的功能，可根据需要添加，更多信息请查看例子。
+
 ```java
 	
     mPlayerView.init()
@@ -166,12 +165,12 @@ You can use custom data type of Danmaku. For more details please see the example
 
 ### Other
 
-There will be some problems in fullscreen when you use do the following options:
+可能影响到沉浸式全屏的几个问题：
 
-- Use *android:fitssystemwindows="true"* 
-- Use [SystemBarTint](https://github.com/jgilfelt/SystemBarTint)
+- 使用 *android:fitssystemwindows="true"* 属性
+- 使用 [SystemBarTint](https://github.com/jgilfelt/SystemBarTint) 来渲染状态栏
 
-Ensure IjkPlayerView is on the top of your layout except ToolBar.
+事实上，你要确保在变换为全屏时IjkPlayerView控件能够填充整个屏幕，不然就会出现播放界面被挤压的情况。这个问题是因为全屏的时候是对当前的IjkPlayerView直接做宽高，所以有局限性，你可以参考别的播放库有别的实现方式来避免这个问题。
 
 ### Thanks
 
