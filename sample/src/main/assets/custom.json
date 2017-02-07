@@ -4,7 +4,9 @@
     "textColor": -1,
     "time": 0,
     "textSize": 60,
-    "type": 1
+    "type": 1,
+    "userName": "Tom",
+    "userLevel": 2
   },
   {
     "content": "。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。",

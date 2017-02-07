@@ -31,10 +31,10 @@ public abstract class BaseDanmakuConverter<T extends BaseDanmakuData> {
         } else if (danmaku instanceof FTDanmaku) {
             danmakuType = BaseDanmaku.TYPE_FIX_TOP;
         }
-        data.type = danmakuType;
-        data.content = danmaku.text.toString();
-        data.time = danmaku.getTime();
-        data.textSize = danmaku.textSize;
-        data.textColor = danmaku.textColor;
+        data.setType(danmakuType);
+        data.setContent(danmaku.text.toString());
+        data.setTime(danmaku.getTime());
+        data.setTextSize(danmaku.textSize);
+        data.setTextColor(danmaku.textColor);
     }
 }

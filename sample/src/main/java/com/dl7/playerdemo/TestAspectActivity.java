@@ -8,6 +8,7 @@ import android.widget.ListView;
 
 import com.bumptech.glide.Glide;
 import com.dl7.player.media.IjkPlayerView;
+import com.dl7.player.utils.SDCardUtils;
 import com.dl7.playerdemo.adapter.ListAdapter;
 
 import java.util.ArrayList;
@@ -36,10 +37,11 @@ public class TestAspectActivity extends AppCompatActivity {
         mAdapter = new ListAdapter(this, list);
         mListView.setAdapter(mAdapter);
 
+        String path = SDCardUtils.getRootPath() + "/360/2.rmvb";
         Glide.with(this).load(IMAGE_URL).fitCenter().into(mPlayerView.mPlayerThumb);
         mPlayerView.init()
                 .setTitle("美加州死亡谷石头会走路")
-                .setVideoPath(VIDEO_URL);
+                .setVideoPath(path);
     }
 
     @Override

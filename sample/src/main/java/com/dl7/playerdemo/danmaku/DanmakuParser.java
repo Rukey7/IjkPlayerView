@@ -43,13 +43,13 @@ public class DanmakuParser extends BaseDanmakuParser {
             List<DanmakuData> datas = GsonHelper.convertEntities(jsonStr, DanmakuData.class);
             int size = datas.size();
             for (int i = 0; i < size; i++) {
-                BaseDanmaku item = mContext.mDanmakuFactory.createDanmaku(datas.get(i).type, mContext);
+                BaseDanmaku item = mContext.mDanmakuFactory.createDanmaku(datas.get(i).getType(), mContext);
                 if (item != null) {
-                    item.setTime(datas.get(i).time);
-                    item.textSize = datas.get(i).textSize;
-                    item.textColor = datas.get(i).textColor;
+                    item.setTime(datas.get(i).getTime());
+                    item.textSize = datas.get(i).getTextSize();
+                    item.textColor = datas.get(i).getTextColor();
                     item.textShadowColor = textColor <= Color.BLACK ? Color.WHITE : Color.BLACK;
-                    DanmakuUtils.fillText(item, datas.get(i).content);
+                    DanmakuUtils.fillText(item, datas.get(i).getContent());
                     item.index = i;
                     item.setTimer(mTimer);
                     danmakus.addItem(item);
