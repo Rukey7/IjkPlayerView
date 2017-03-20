@@ -466,6 +466,18 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
     }
 
     /**
+     * 切换视频
+     * @param url
+     * @return
+     */
+    public IjkPlayerView switchVideo(String url) {
+        mCurPosition = 0;
+        mVideoView.release(false);
+        mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
+        return setVideoPath(Uri.parse(url));
+    }
+
+    /**
      * 设置播放资源
      *
      * @param url
@@ -543,6 +555,14 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         }
         // 视频播放时开启屏幕常亮
         mAttachActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    public void restart() {
+        if (mVideoView.isPlaying()) {
+            mCurPosition = mVideoView.getCurrentPosition();
+            mVideoView.release(false);
+        }
+        mVideoView.setRender(IjkVideoView.RENDER_TEXTURE_VIEW);
     }
 
     /**
@@ -1492,7 +1512,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * @param status
      */
     private void _switchStatus(int status) {
-        Log.d("TTAG", "status " + status);
+        Log.e("TTAG", "status " + status);
+        Log.e("TTAG", "status " + mVideoView.getCurrentPosition());
         switch (status) {
             case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
                 mIsBufferingStart = true;
