@@ -59,6 +59,19 @@
 
     <include layout="@layout/layout_skip_tip"/>
 
+    <TextView
+        android:id="@+id/tv_reload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="点击重试"
+        android:padding="10dp"
+        android:visibility="gone"
+        android:textColor="#d4237a"
+        android:textSize="16sp"
+        android:drawableTop="@mipmap/ic_reload"/>
+
     <ImageView
         android:id="@+id/iv_play_circle"
         android:src="@mipmap/ic_play_circle"

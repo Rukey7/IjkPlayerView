@@ -49,4 +49,14 @@
         android:gravity="center"
         android:text="自定义弹幕解析"
         android:textAllCaps="false"/>
+
+    <Button
+        android:id="@+id/btn_switch_video"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@mipmap/bg_card"
+        android:gravity="center"
+        android:text="切换不同视频源"
+        android:textAllCaps="false"/>
 </LinearLayout>

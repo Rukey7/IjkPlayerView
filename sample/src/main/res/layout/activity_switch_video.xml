@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_test_aspect"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.dl7.playerdemo.TestAspectActivity">
+
+    <com.dl7.player.media.IjkPlayerView
+        android:id="@+id/player_view"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"/>
+
+    <com.dl7.tag.TagLayout
+        android:id="@+id/tag_layout"
+        android:layout_marginTop="50dp"
+        android:layout_width="match_parent"
+        app:tag_layout_fit_num="3"
+        app:tag_layout_mode="single_choice"
+        app:tag_view_border_color_check="@android:color/holo_red_light"
+        app:tag_view_text_color_check="@android:color/holo_red_light"
+        app:tag_view_bg_color_check="@android:color/white"
+        android:layout_height="wrap_content"/>
+</LinearLayout>
