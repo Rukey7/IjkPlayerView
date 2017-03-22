@@ -32,8 +32,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.2.0'
     testCompile 'junit:junit:4.12'
     // ijkplayer
-    compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.5'
-    compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.5'
+    compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.8.1'
+    compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.8.1'
 //    compile 'com.github.Rukey7:ijkplayer-armv7a:0.7.5'
     // Danmaku
     compile 'com.github.ctiao:DanmakuFlameMaster:0.6.2'
