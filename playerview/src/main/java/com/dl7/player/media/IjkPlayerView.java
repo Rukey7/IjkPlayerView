@@ -2434,6 +2434,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 从弹幕编辑状态复原界面
      */
     private void _recoverScreen() {
+        if (!mIsEnableDanmaku) {
+            return;
+        }
         // 清除焦点
         mEditDanmakuLayout.clearFocus();
         mEditDanmakuLayout.setVisibility(GONE);
