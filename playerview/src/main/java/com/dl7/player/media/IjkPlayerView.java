@@ -102,6 +102,19 @@ import static tv.danmaku.ijk.media.player.IMediaPlayer.OnInfoListener;
  */
 public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
 
+    private boolean showFullScreen = true;
+
+    public void setShowFullScreen(boolean showFullScreen) {
+        this.showFullScreen = showFullScreen;
+        if (showFullScreen) {
+            mIvFullscreen.setVisibility(VISIBLE);
+            mIvBack.setVisibility(VISIBLE);
+        } else {
+            mIvFullscreen.setVisibility(INVISIBLE);
+            mIvBack.setVisibility(INVISIBLE);
+        }
+    }
+
     // 进度条最大值
     private static final int MAX_VIDEO_SEEK = 1000;
     // 默认隐藏控制栏时间
