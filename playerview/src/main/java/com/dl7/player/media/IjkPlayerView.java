@@ -1,6 +1,7 @@
 package com.dl7.player.media;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -100,6 +101,19 @@ import static tv.danmaku.ijk.media.player.IMediaPlayer.OnInfoListener;
  * Created by long on 2016/10/24.
  */
 public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
+
+    private boolean showFullScreen = true;
+
+    public void setShowFullScreen(boolean showFullScreen) {
+        this.showFullScreen = showFullScreen;
+        if (showFullScreen) {
+            mIvFullscreen.setVisibility(VISIBLE);
+            mIvBack.setVisibility(VISIBLE);
+        } else {
+            mIvFullscreen.setVisibility(INVISIBLE);
+            mIvBack.setVisibility(INVISIBLE);
+        }
+    }
 
     // 进度条最大值
     private static final int MAX_VIDEO_SEEK = 1000;
@@ -332,8 +346,17 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         mMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         // 亮度
         try {
-            int e = Settings.System.getInt(mAttachActivity.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-            float progress = 1.0F * (float) e / 255.0F;
+            float progress;
+            ContentResolver cr = mAttachActivity.getContentResolver();
+            boolean autoBrightness = Settings.System.getInt(cr, Settings.System.SCREEN_BRIGHTNESS_MODE) == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC;
+            if (autoBrightness) {
+                //[-1,1]
+                progress = Settings.System.getFloat(cr, "screen_auto_brightness_adj");
+            } else {
+                //[0,255]
+                int e = Settings.System.getInt(cr, Settings.System.SCREEN_BRIGHTNESS);
+                progress = 1.0F * (float) e / 255.0F;
+            }
             WindowManager.LayoutParams layout = mAttachActivity.getWindow().getAttributes();
             layout.screenBrightness = progress;
             mAttachActivity.getWindow().setAttributes(layout);
@@ -2434,6 +2457,9 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 从弹幕编辑状态复原界面
      */
     private void _recoverScreen() {
+        if (!mIsEnableDanmaku) {
+            return;
+        }
         // 清除焦点
         mEditDanmakuLayout.clearFocus();
         mEditDanmakuLayout.setVisibility(GONE);
